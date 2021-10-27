@@ -49,7 +49,8 @@ def printMenu():
     print("3. Contar los avistamientos por Hora/Minutos del día ")
     print("4. Contar los avistamientos en un rango de fechas ")
     print("5. Contar los avistamientos de una zona geográfica ")
-    print("6. Visualizar los avistamientos de una zona geográfica ")
+    print("6. Visualizar los avistamientos de una zona geográfica")
+    print("-"*50,"\n")
 
 catalog = None
 
@@ -95,6 +96,27 @@ def printCarga(lista):
 
     printPrettyTable(lista,keys,fieldNames,maxWidth,sample=3,ultimas=True)
 
+def printAvistamientosPorCiudad(respuesta,ciudad):
+    listaAvistamientos=respuesta[0]
+    listaCiudades=respuesta[1]
+
+    print("\nLas cinco ciudades con más avistamientos son:\n")
+    keys=["city","tam"]
+    fieldNames=["Ciudad","Cantidad"]
+    maxWidth = {"Ciudad":10,"Cantidad":10}
+    printPrettyTable(listaCiudades,keys,fieldNames,maxWidth,sample=5,ultimas=False)    
+
+    print("\n\nEn total hay",lt.size(listaAvistamientos),"en",ciudad,"a continuación se presentan los tres primeros y tres últimos de las lista\n")
+    keys=["datetime","city","state","country","shape",
+                        "duration (seconds)","comments","longitude","latitude"]
+    fieldNames=["Fecha","Ciudad","Estado","País","Forma",
+                        "Duración","Comentarios","Longitud","Latitud"]
+    maxWidth = {"Fecha":10,"Ciudad":10,"Estado":10,"País":10,"Forma":10,
+                        "Duración":10,"Comentarios":30,"Longitud":10,"Latitud":10}
+
+    printPrettyTable(listaAvistamientos,keys,fieldNames,maxWidth,sample=3,ultimas=True)
+
+
 """
 Menu principal
 """
@@ -112,6 +134,9 @@ while True:
 
     # Requerimiento 1: Avistamientos por ciudad
     elif int(inputs[0]) == 1:
+        ciudad=input("Ingrese el nombre de la ciudad: ")
+        respuesta=controller.avistamientosPorCiudad(catalog,ciudad)
+        printAvistamientosPorCiudad(respuesta,ciudad)
         pass
 
     elif int(inputs[0]) == 2:

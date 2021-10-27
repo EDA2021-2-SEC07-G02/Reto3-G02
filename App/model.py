@@ -31,8 +31,11 @@ from DISClib.ADT import map as mp
 from DISClib.ADT import orderedmap as om
 from DISClib.DataStructures import mapentry as me
 from DISClib.Algorithms.Sorting import shellsort as sa
+from DISClib.Algorithms.Sorting import mergesort as ms
+from DISClib.Algorithms.Sorting import selectionsort as selection
 assert cf
 import datetime
+import time
 
 """
 Se define la estructura de un catálogo de videos. El catálogo tendrá dos listas, una para los videos, otra para las categorias de
@@ -83,6 +86,37 @@ def updateIndexCity(catalog,ufo,posicion):
 
 # Funciones de consulta
 
+def avistamientosPorCiudad(catalog,ciudad): # Requerimiento Grupal 1: Contar los avistamientos de una ciudad
+
+    ufos=om.get(catalog["cityIndex"],ciudad)["value"]
+    listaAvistamiento=lt.newList("ARRAY_LIST")
+    for indice in lt.iterator(ufos):
+        lt.addLast(listaAvistamiento,lt.getElement(catalog["ufos"],indice))
+    listaAvistamiento=sortList(listaAvistamiento,compareUFObyDate)
+
+    listaCiudades=om.keySet(catalog["cityIndex"])
+    listaCiudades=lt.subList(listaCiudades,1,lt.size(listaCiudades))
+
+    listaCiudadesUFO=lt.newList("ARRAY_LIST")
+
+    for num in range(5):
+        cont=1
+        maxi=0
+        nombre_max=""
+        indice_borrar=0
+        for ciudad in lt.iterator(listaCiudades):
+            tam=lt.size(om.get(catalog["cityIndex"],ciudad)["value"])
+            if tam>maxi:
+                maxi=tam
+                nombre_max=ciudad
+                indice_borrar=cont
+            cont+=1
+        if(indice_borrar>0):
+            lt.deleteElement(listaCiudades,indice_borrar)
+            lt.addLast(listaCiudadesUFO,{"city":nombre_max,"tam":maxi})
+
+    return listaAvistamiento, listaCiudadesUFO
+
 # Funciones utilizadas para comparar elementos dentro de una lista
 
 def compareDates(date1, date2):
@@ -96,5 +130,36 @@ def compareDates(date1, date2):
     else:
         return -1
 
+def compareUFObyDate(ufo1,ufo2):
+    """
+    Compara dos fechas
+    """
+    date1=time.strptime(ufo1["datetime"], '%Y-%m-%d %H:%M:%S')
+    date2=time.strptime(ufo2["datetime"], '%Y-%m-%d %H:%M:%S')
+
+    return date1 < date2
+
 
 # Funciones de ordenamiento
+
+def sortList(lista,cmpFunction,sortType=3):
+    """
+    ####### FUNCIÓN MODIFICADA PARA HACER PRUEBAS #####
+    Función de ordenamiento que se usará en distintos requerimientos dependiendo
+    del ordenamiento deseado
+    Parámetros: 
+        lista: lista que se ordenara
+        cmpFunction: función de comparación
+        sortType: tipo de ordenamiento (1)Insertion - (2)Selection - (3)Merge - (4)Quick
+    Retorno:
+        lista ordenada por insertion
+    """
+    if sortType == 1:
+        sorted_list= selection.sort(lista,cmpFunction) 
+    elif sortType == 2:
+        sorted_list= sa.sort(lista,cmpFunction)
+    elif sortType == 3:
+        sorted_list= ms.sort(lista,cmpFunction)
+    else:
+        sorted_list= ms.sort(lista,cmpFunction)
+    return sorted_list
