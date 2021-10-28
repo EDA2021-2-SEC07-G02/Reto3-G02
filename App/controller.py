@@ -56,6 +56,8 @@ def loadData(catalog, ufosfile):
 # Funciones de ordenamiento
 
 # Funciones de consulta sobre el catálogo
+def infoTreeUFOS(catalog):
+    return model.infoTreeUFOS(catalog)
 
 def avistamientosPorCiudad(catalog, ciudad):
     return model.avistamientosPorCiudad(catalog,ciudad)

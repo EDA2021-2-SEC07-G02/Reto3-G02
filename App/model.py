@@ -117,6 +117,13 @@ def avistamientosPorCiudad(catalog,ciudad): # Requerimiento Grupal 1: Contar los
 
     return listaAvistamiento, listaCiudadesUFO
 
+#Funciones de consulta para el lab 8
+def infoTreeUFOS(catalog):
+    sizeUFOs=lt.size(catalog["ufos"])
+    alturaCityIndex=om.height(catalog['cityIndex'])
+    nElementosCityIndex= om.size(catalog['cityIndex'])
+    return sizeUFOs,alturaCityIndex,nElementosCityIndex
+
 # Funciones utilizadas para comparar elementos dentro de una lista
 
 def compareDates(date1, date2):

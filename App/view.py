@@ -50,6 +50,7 @@ def printMenu():
     print("4. Contar los avistamientos en un rango de fechas ")
     print("5. Contar los avistamientos de una zona geográfica ")
     print("6. Visualizar los avistamientos de una zona geográfica")
+    print("7. Salir")
     print("-"*50,"\n")
 
 catalog = None
@@ -85,8 +86,12 @@ def printPrettyTable(lista, keys, field_names, max_width, sample=3, ultimas=Fals
     
     print(artPretty)
 
-def printCarga(lista):
-    print("En total se subieron",lt.size(lista),"UFOS. A continuación se presentan 3 primeros registros y 3 últimos registros")
+def printCarga(lista,infoArbol):
+    print("En total se registraron "+ str(infoArbol[0])+" avistamientos de UFOS.") #LAB8 los datos característicos (altura y número de elementos)
+    print("Altura Árbol CityIndex",infoArbol[1])
+    print("Hay "+ str(infoArbol[2]) + " ciudades con avistamientos de UFOS\n")
+    print("\nA continuación se presentan 3 primeros registros y 3 últimos registros")
+
     keys=["datetime","city","state","country","shape",
                         "duration (seconds)","comments","longitude","latitude"]
     fieldNames=["Fecha","Ciudad","Estado","País","Forma",
@@ -126,11 +131,12 @@ while True:
     inputs = input('Seleccione una opción para continuar\n')
 
     # Requerimiento 0: Carga de datos
-    if int(inputs[0]) == 0:
+    if int(inputs[0]) == 0: #CARGA DE DATOS (Opción 3 según el LAB 8)
         catalog=controller.init()
         print("\nCargando información de los archivos ....\n")
         controller.loadData(catalog,ufosfile)
-        printCarga(catalog["ufos"])
+        infoArbol=controller.infoTreeUFOS(catalog)
+        printCarga(catalog["ufos"],infoArbol)
 
     # Requerimiento 1: Avistamientos por ciudad
     elif int(inputs[0]) == 1:
