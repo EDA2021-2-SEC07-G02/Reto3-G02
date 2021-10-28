@@ -43,8 +43,8 @@ operación solicitada
 def printMenu():
     print("-"*50)
     print("Bienvenido")
-    print("0. Cargar información en el catálogo")
-    print("1. Contar avistamientos en una ciudad ")
+    print("0. Cargar información en el catálogo (Avance Lab8)")
+    print("1. Contar avistamientos en una ciudad (Avance Lab8) ")
     print("2. Contar los avistamientos por duración ")
     print("3. Contar los avistamientos por Hora/Minutos del día ")
     print("4. Contar los avistamientos en un rango de fechas ")
@@ -87,9 +87,9 @@ def printPrettyTable(lista, keys, field_names, max_width, sample=3, ultimas=Fals
     print(artPretty)
 
 def printCarga(lista,infoArbol):
-    print("En total se registraron "+ str(infoArbol[0])+" avistamientos de UFOS.") #LAB8 los datos característicos (altura y número de elementos)
+    print("En total se registraron "+ str(infoArbol[0])+" avistamientos de UFOs.") #LAB8 los datos característicos (altura y número de elementos)
     print("Altura Árbol CityIndex",infoArbol[1])
-    print("Hay "+ str(infoArbol[2]) + " ciudades con avistamientos de UFOS\n")
+    print("Hay "+ str(infoArbol[2]) + " ciudades con avistamientos de UFOs\n")
     print("\nA continuación se presentan 3 primeros registros y 3 últimos registros")
 
     keys=["datetime","city","state","country","shape",
