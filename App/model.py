@@ -92,7 +92,8 @@ def avistamientosPorCiudad(catalog,ciudad): # Requerimiento Grupal 1: Contar los
     listaAvistamiento=lt.newList("ARRAY_LIST")
     for indice in lt.iterator(ufos):
         lt.addLast(listaAvistamiento,lt.getElement(catalog["ufos"],indice))
-    listaAvistamiento=sortList(listaAvistamiento,compareUFObyDate)
+    listaAvistamiento=selection.sortEdit(listaAvistamiento,compareUFObyDate,3,
+                                        ordenarInicio=True,ordenarFinal=True) #Lista editada con selection
 
     listaCiudades=om.keySet(catalog["cityIndex"])
     listaCiudades=lt.subList(listaCiudades,1,lt.size(listaCiudades))
@@ -116,6 +117,37 @@ def avistamientosPorCiudad(catalog,ciudad): # Requerimiento Grupal 1: Contar los
             lt.addLast(listaCiudadesUFO,{"city":nombre_max,"tam":maxi})
 
     return listaAvistamiento, listaCiudadesUFO
+
+
+def avistamientoRangoFechas(catalog,fechaInicial,fechaFinal):
+    #fechaInicialHora=fechaInicial+" 00:00:00" #se agrega la hora de inicio de día para coincidir con el formato del csv
+    #fechaFinalHora=fechaFinal+" 23:59:59"
+    #print(fechaFinalHora,fechaInicialHora)
+    date1=(datetime.datetime.strptime(fechaInicial, '%Y-%m-%d')).date()
+    date2=(datetime.datetime.strptime(fechaFinal, '%Y-%m-%d')).date()
+
+    listaFechasArbol=om.keySet(catalog["dateIndex"])
+
+    #Ultimas fechas
+    keysUltimasFechas=lt.subList(listaFechasArbol,1,5)
+    respuestaUltimasFechas=lt.newList("ARRAY_LIST")
+    for fechaUltima in lt.iterator(keysUltimasFechas):
+        infoFecha=om.get(catalog["dateIndex"],fechaUltima)
+        fechaStr=fechaUltima.strftime('%Y-%m-%d') #se convierte de datetime a str
+        elemento={"date":fechaStr,"count":infoFecha["value"]["size"]}
+        lt.addLast(respuestaUltimasFechas,elemento)
+    
+    #Fechas dentro del rango brindado por el usuario
+    listaFechasAvistamientos=lt.newList("ARRAY_LIST")
+    listaRespuestaView=lt.newList("ARRAY_LIST")
+    n=0
+    for fecha in lt.iterator(listaFechasArbol):
+        if fecha>date1 and fecha<date2:
+            lt.addLast(listaFechasAvistamientos,fecha)
+        if n<6: #Número de avistamientos en el view
+            pass #implementar despuésssssss
+
+    return respuestaUltimasFechas, listaFechasAvistamientos,listaFechasAvistamientos["size"]
 
 #Funciones de consulta para el lab 8
 def infoTreeUFOS(catalog):

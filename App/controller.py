@@ -59,5 +59,8 @@ def loadData(catalog, ufosfile):
 def infoTreeUFOS(catalog):
     return model.infoTreeUFOS(catalog)
 
+def avistamientoRangoFechas(catalog,fechaInicial,fechaFinal):
+    return model.avistamientoRangoFechas(catalog,fechaInicial,fechaFinal)
+
 def avistamientosPorCiudad(catalog, ciudad):
     return model.avistamientosPorCiudad(catalog,ciudad)

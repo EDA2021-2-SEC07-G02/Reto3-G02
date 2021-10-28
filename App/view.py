@@ -121,6 +121,16 @@ def printAvistamientosPorCiudad(respuesta,ciudad):
 
     printPrettyTable(listaAvistamientos,keys,fieldNames,maxWidth,sample=3,ultimas=True)
 
+def printAvistamientosFechas(respuesta,fechaInicial,fechaFinal):
+    print("\nLas últimas 5 fechas son: ")
+    keys=["date","count"]
+    maxWidth = {"date":12,"count":10}
+    fieldNames=["date","count"]
+    printPrettyTable(respuesta[0],keys,fieldNames,maxWidth,sample=5)
+
+    print("Existen "+str(respuesta[2])+" avistamientos de UFOs en el rango de fechas: "+fechaInicial+" - "+fechaFinal)
+    print("A continuación se presentan los tres primeros y tres últimos avistamientos en este rango de fechas")
+    print("\n\n... por implementar")
 
 """
 Menu principal
@@ -152,7 +162,10 @@ while True:
         print("Por implementar ....")
 
     elif int(inputs[0]) == 4:
-        print("Por implementar ....")
+        fechaInicial=input("Ingrese la fecha inicial (AAAA-MM-DD): ")
+        fechaFinal=input("Ingrese la fecha final (AAAA-MM-DD): ")
+        respuesta=controller.avistamientoRangoFechas(catalog,fechaInicial,fechaFinal)
+        printAvistamientosFechas(respuesta,fechaFinal,fechaFinal)
 
     elif int(inputs[0]) == 5:
         print("Por implementar ....")
