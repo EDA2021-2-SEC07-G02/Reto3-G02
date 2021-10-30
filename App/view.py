@@ -86,10 +86,12 @@ def printPrettyTable(lista, keys, field_names, max_width, sample=3, ultimas=Fals
     
     print(artPretty)
 
-def printCarga(lista,infoArbol):
-    print("En total se registraron "+ str(infoArbol[0])+" avistamientos de UFOs.") #LAB8 los datos característicos (altura y número de elementos)
-    print("Altura Árbol CityIndex",infoArbol[1])
-    print("Hay "+ str(infoArbol[2]) + " ciudades con avistamientos de UFOs\n")
+def printCarga(lista,infoArbol=None,requerimiento=0):
+    if requerimiento==0:
+        print("En total se registraron "+ str(infoArbol[0])+" avistamientos de UFOs.") #LAB8 los datos característicos (altura y número de elementos)
+        print("Altura Árbol CityIndex",infoArbol[1])
+        print("Hay "+ str(infoArbol[2]) + " ciudades con avistamientos de UFOs\n")
+
     print("\nA continuación se presentan 3 primeros registros y 3 últimos registros")
 
     keys=["datetime","city","state","country","shape",
@@ -122,15 +124,16 @@ def printAvistamientosPorCiudad(respuesta,ciudad):
     printPrettyTable(listaAvistamientos,keys,fieldNames,maxWidth,sample=3,ultimas=True)
 
 def printAvistamientosFechas(respuesta,fechaInicial,fechaFinal):
-    print("\nLas últimas 5 fechas son: ")
+    print("\n\nHay "+str(respuesta[4])+" avistamientos de UFOs registrados en fechas distintas")
+    print("\nLas últimas fecha de avistamiento es: ") #print("\nLas últimas 5 fechas son: ")
     keys=["date","count"]
     maxWidth = {"date":12,"count":10}
     fieldNames=["date","count"]
-    printPrettyTable(respuesta[0],keys,fieldNames,maxWidth,sample=5)
+    printPrettyTable(respuesta[0],keys,fieldNames,maxWidth,sample=1)
 
     print("Existen "+str(respuesta[2])+" avistamientos de UFOs en el rango de fechas: "+fechaInicial+" - "+fechaFinal)
     print("A continuación se presentan los tres primeros y tres últimos avistamientos en este rango de fechas")
-    print("\n\n... por implementar")
+    printCarga(respuesta[3],requerimiento=4)
 
 """
 Menu principal
@@ -165,7 +168,7 @@ while True:
         fechaInicial=input("Ingrese la fecha inicial (AAAA-MM-DD): ")
         fechaFinal=input("Ingrese la fecha final (AAAA-MM-DD): ")
         respuesta=controller.avistamientoRangoFechas(catalog,fechaInicial,fechaFinal)
-        printAvistamientosFechas(respuesta,fechaFinal,fechaFinal)
+        printAvistamientosFechas(respuesta,fechaInicial,fechaFinal)
 
     elif int(inputs[0]) == 5:
         print("Por implementar ....")

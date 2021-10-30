@@ -25,6 +25,7 @@
  """
 
 
+from DISClib.DataStructures.bst import maxKey
 import config as cf
 from DISClib.ADT import list as lt
 from DISClib.ADT import map as mp
@@ -119,35 +120,110 @@ def avistamientosPorCiudad(catalog,ciudad): # Requerimiento Grupal 1: Contar los
     return listaAvistamiento, listaCiudadesUFO
 
 
-def avistamientoRangoFechas(catalog,fechaInicial,fechaFinal):
-    #fechaInicialHora=fechaInicial+" 00:00:00" #se agrega la hora de inicio de día para coincidir con el formato del csv
-    #fechaFinalHora=fechaFinal+" 23:59:59"
-    #print(fechaFinalHora,fechaInicialHora)
+def avistamientoRangoFechas(catalog,fechaInicial,fechaFinal): #req grupal 4
+    """
+    Función principal requerimiento 4
+    Parámetros:
+        catalog: catálogo con árboles y lista relacionados a avistamientos de UFOs
+        fechaInicial: Fecha inicial dada por el usuario
+        fechaFinal: Fecha Final dada por el usuario
+    Retorno:
+        respuestaUltimasFechas: últimas 5 fechas de avistamientos
+        soloRango: fechas de avistamientos dentro del rango de fechas
+        diasAvistamientos: días con avistamientos de UFOs dentro del rango de fechas
+        listaRespuestaView: lista con los 3 primeros y últimos avistamientos
+        sizeArbol=total de fechas de avistamientos de UFOs
+    """
     date1=(datetime.datetime.strptime(fechaInicial, '%Y-%m-%d')).date()
     date2=(datetime.datetime.strptime(fechaFinal, '%Y-%m-%d')).date()
 
-    listaFechasArbol=om.keySet(catalog["dateIndex"])
+    sizeArbol=om.size(catalog["dateIndex"])
 
-    #Ultimas fechas
-    keysUltimasFechas=lt.subList(listaFechasArbol,1,5)
-    respuestaUltimasFechas=lt.newList("ARRAY_LIST")
-    for fechaUltima in lt.iterator(keysUltimasFechas):
-        infoFecha=om.get(catalog["dateIndex"],fechaUltima)
-        fechaStr=fechaUltima.strftime('%Y-%m-%d') #se convierte de datetime a str
-        elemento={"date":fechaStr,"count":infoFecha["value"]["size"]}
-        lt.addLast(respuestaUltimasFechas,elemento)
+    #Ultimas fechas #1era manera
+    # listaFechasArbol=om.keySet(catalog["dateIndex"])
+    # keysUltimasFechas=lt.subList(listaFechasArbol,1,5)
+    # respuestaUltimasFechas=lt.newList("ARRAY_LIST")
+    # for fechaUltima in lt.iterator(keysUltimasFechas):
+    #     infoFecha=om.get(catalog["dateIndex"],fechaUltima)
+    #     fechaStr=fechaUltima.strftime('%Y-%m-%d') #se convierte de datetime a str
+    #     elemento={"date":fechaStr,"count":infoFecha["value"]["size"]}
+    #     lt.addLast(respuestaUltimasFechas,elemento)
     
+    #actualización reto 
+    minkey=om.minKey(catalog["dateIndex"])
+    infoMinKey=om.get(catalog["dateIndex"],minkey)["value"]
+    respuestaUltimasFechas=lt.newList("ARRAY_LIST")
+    lt.addLast(respuestaUltimasFechas,{"date":minkey.strftime('%Y-%m-%d'),
+                                        "count":infoMinKey["size"]})
     #Fechas dentro del rango brindado por el usuario
-    listaFechasAvistamientos=lt.newList("ARRAY_LIST")
-    listaRespuestaView=lt.newList("ARRAY_LIST")
-    n=0
-    for fecha in lt.iterator(listaFechasArbol):
-        if fecha>date1 and fecha<date2:
-            lt.addLast(listaFechasAvistamientos,fecha)
-        if n<6: #Número de avistamientos en el view
-            pass #implementar despuésssssss
+    avistamientoRango=om.keys(catalog["dateIndex"],date1,date2)
+    diasAvistamientos=avistamientoRango["size"]
+    listaRespuestaView=ListasRespuesta(catalog,avistamientoRango,"req4")
 
-    return respuestaUltimasFechas, listaFechasAvistamientos,listaFechasAvistamientos["size"]
+    return respuestaUltimasFechas, avistamientoRango,diasAvistamientos,listaRespuestaView,sizeArbol
+
+def ListasRespuesta(catalog,tabla,requerimiento): #req 4 - función complementaria
+    """
+    Función usado para obtener los 3 primeros y últimos elementos
+    Primero se recorre las posiciones de los keys de una tabla, seguido a esto
+    se obtiene su valor correspondiente, el cual será una lista (lista_en_pos).
+    Después de esto se recorrerá sobre esta lista (lista_en_pos) y se añadirán elementos
+    a la lista de respuesta. Al tener los 3 primeros elementos se pasará a la última posición
+    de la tabla para obtener los 3 últimos.
+    La función se detendrá hasta tener 6 elementos en la lista de respuesta.
+    
+    Parámetros
+        tabla: lista con keys -> árbol (<key,value>)
+    Retorno
+        lista_respuesta: lista con los 3 primeros y 3 últimos elementos
+    
+    """
+    keys=tabla
+    if requerimiento=="req4": #se convierte de single linked a array, !!!modificar después
+        keys=lt.newList("ARRAY_LIST")
+        for key in lt.iterator(tabla): 
+            lt.addLast(keys,key)
+
+    recorrer=True
+    pos=1
+    lista_respuesta=lt.newList("ARRAY_LIST")
+    while recorrer and lista_respuesta["size"]<=6:
+        key_actual=lt.getElement(keys,pos)
+        lista_en_pos=om.get(catalog["dateIndex"],key_actual)["value"] #Se obtiene la lista correspondiente a esa pos
+        pos_j=1
+        
+        condiciones_elementos= True
+        while condiciones_elementos and pos_j<=lista_en_pos["size"]: #Se detendrá el recorrido de cada key
+            
+            pos_UFOlist=lt.getElement(lista_en_pos,pos_j)
+            elemento=lt.getElement(catalog["ufos"],pos_UFOlist) #elemento que se agrega en la lista de respuesta
+            lt.addLast(lista_respuesta,elemento)
+            pos_j+=1
+
+            if lista_respuesta["size"]>=6 and (pos>(keys["size"]-5)+1) and (keys["size"]>=3+1): #se cumple siempre que la lista sea >3
+                condiciones_elementos=False
+                
+            elif lista_respuesta["size"]>=3 and pos<3+1 and keys["size"]>=3+1: #se cumple siempre que la lista sea>3
+                condiciones_elementos=False
+            
+            elif lista_respuesta["size"]>=6:
+                condiciones_elementos=False # se termina el proceso en cualquier otro caso (se evitan errores en caso de que la lista sea de tamaño <6 // se puede usar también un break 
+
+        if lista_respuesta["size"]>=6:
+            recorrer=False
+        if pos==3+1 or lista_respuesta["size"]==3: #Se pasa a la última posición cuando se han obtenido los 3 primeros elementos 
+            pos=keys["size"]
+            
+        elif lista_respuesta["size"]<=3 and pos<3+1:
+            pos+=1
+            
+        elif lista_respuesta["size"]>3 and pos>(keys["size"]-5+1):
+            pos-=1
+    
+    if requerimiento=="req4": #se ordenan los últimos 3 UFOS por fecha
+        selection.sortEdit(lista_respuesta,compareUFObyDate,3,ordenarInicio=False,ordenarFinal=True)
+    return lista_respuesta
+
 
 #Funciones de consulta para el lab 8
 def infoTreeUFOS(catalog):
