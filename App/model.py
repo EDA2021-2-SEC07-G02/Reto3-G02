@@ -50,9 +50,13 @@ def newCatalog():
              'dateIndex':None}
     catalog['ufos']=lt.newList('ARRAY_LIST')
     catalog['dateIndex']=om.newMap(omaptype='RBT',
-                                   comparefunction=compareDates)
+                                   comparefunction=compareDatesMap)
     catalog['cityIndex']=om.newMap(omaptype='RBT',
-                                   comparefunction=compareDates)
+                                   comparefunction=compareCitiesMap)
+    catalog['durationIndex']=om.newMap(omaptype='RBT',
+                                   comparefunction=compareDurationMap)
+    catalog['longitudIndex']=om.newMap(omaptype='RBT',
+                                   comparefunction=compareLatLongMap)
     return catalog
 
 
@@ -63,6 +67,8 @@ def addUfo(catalog,ufo):
     posicion=lt.size(catalog['ufos'])
     updateIndexDate(catalog,ufo,posicion)
     updateIndexCity(catalog,ufo,posicion)
+    updateDuration(catalog,ufo,posicion)
+    updateLongitud(catalog,ufo,posicion)
 
 
 def updateIndexDate(catalog,ufo,posicion):
@@ -83,41 +89,75 @@ def updateIndexCity(catalog,ufo,posicion):
         lt.addLast(lista,posicion)
         om.put(catalog['cityIndex'],ufoCity,lista)
 
+def updateDuration(catalog,ufo,posicion):
+    duration=ufo["duration (seconds)"]
+    duration=int(float(duration))
+    if om.contains(catalog['durationIndex'],duration):
+        lt.addLast(om.get(catalog['durationIndex'],duration)["value"],posicion)
+    else:
+        lista=lt.newList("ARRAY_LIST")
+        lt.addLast(lista,posicion)
+        om.put(catalog['durationIndex'],duration,lista)           
+
+def updateLongitud(catalog,ufo,posicion):
+    longitud=ufo["longitude"]
+    latitud=ufo["latitude"]
+    longitud=round(float(longitud),2)
+    latitud=round(float(latitud),2)
+    if(om.contains(catalog["longitudIndex"],longitud)):
+        mapLat=om.get(catalog["longitudIndex"],longitud)["value"]
+        if (om.contains(mapLat,latitud)):
+            lt.addLast(om.get(mapLat,latitud)["value"],posicion)
+        else:
+            lista=lt.newList("ARRAY_LIST")
+            lt.addLast(lista,posicion)
+            om.put(mapLat,latitud,lista)
+    else:
+        mapLat=om.newMap(omaptype='RBT',
+                                comparefunction=compareLatLongMap)
+        lista=lt.newList("ARRAY_LIST")
+        lt.addLast(lista,posicion)
+        om.put(mapLat,latitud,lista)
+        om.put(catalog["longitudIndex"],longitud,mapLat)
+
+
+
+
 # Funciones para creacion de datos
 
 # Funciones de consulta
 
 def avistamientosPorCiudad(catalog,ciudad): # Requerimiento Grupal 1: Contar los avistamientos de una ciudad
-
+    numeroCiudades=om.size(catalog["cityIndex"])
     ufos=om.get(catalog["cityIndex"],ciudad)["value"]
     listaAvistamiento=lt.newList("ARRAY_LIST")
     for indice in lt.iterator(ufos):
         lt.addLast(listaAvistamiento,lt.getElement(catalog["ufos"],indice))
     listaAvistamiento=selection.sortEdit(listaAvistamiento,compareUFObyDate,3,
-                                        ordenarInicio=True,ordenarFinal=True) #Lista editada con selection
+                                        ordenarInicio=True,ordenarFinal=True) #Lista editada con selection 
 
-    listaCiudades=om.keySet(catalog["cityIndex"])
-    listaCiudades=lt.subList(listaCiudades,1,lt.size(listaCiudades))
+    return listaAvistamiento, numeroCiudades
 
-    listaCiudadesUFO=lt.newList("ARRAY_LIST")
+def avistamientosPorDuracion(catalog,segundos_min,segundos_max): # Requerimiento Individual 2: Contar avistamientos por duración
+    segundos_min=int(float(segundos_min))
+    segundos_max=int(float(segundos_max))
+    numeroDuraciones=om.size(catalog["durationIndex"])
 
-    for num in range(5):
-        cont=1
-        maxi=0
-        nombre_max=""
-        indice_borrar=0
-        for ciudad in lt.iterator(listaCiudades):
-            tam=lt.size(om.get(catalog["cityIndex"],ciudad)["value"])
-            if tam>maxi:
-                maxi=tam
-                nombre_max=ciudad
-                indice_borrar=cont
-            cont+=1
-        if(indice_borrar>0):
-            lt.deleteElement(listaCiudades,indice_borrar)
-            lt.addLast(listaCiudadesUFO,{"city":nombre_max,"tam":maxi})
+    mayorDuracion=om.maxKey(catalog["durationIndex"])
+    cantidadUfosMayorDuracion=lt.size(mayorDuracion["value"])
+    mayorDuracion=mayorDuracion["key"]
 
-    return listaAvistamiento, listaCiudadesUFO
+    
+    keySet=om.keySet(catalog["durationIndex"])
+    posicionInicial=om.rank(segundos_min+1)
+    keySet=lt.subList(keySet,posicionInicial,om.rank(segundos_max+1)-posicionInicial)
+    listaAvistamientos=lt.newList("ARRAY_LIST")
+    for dur in lt.iterator(keySet):
+        listaIndex=om.get(catalog["durationIndex"],dur)["value"]
+        for indice in listaIndex:
+           lt.addLast(listaAvistamientos,lt.getElement(catalog["ufos"],indice))
+
+    return listaAvistamientos, numeroDuraciones, mayorDuracion, cantidadUfosMayorDuracion
 
 
 def avistamientoRangoFechas(catalog,fechaInicial,fechaFinal): #req grupal 4
@@ -224,6 +264,9 @@ def ListasRespuesta(catalog,tabla,requerimiento): #req 4 - función complementar
         selection.sortEdit(lista_respuesta,compareUFObyDate,3,ordenarInicio=False,ordenarFinal=True)
     return lista_respuesta
 
+def contarAvistamientosZonaGeografica(catalog,long_min,long_max,lat_min,lat_max):
+    
+    pass
 
 #Funciones de consulta para el lab 8
 def infoTreeUFOS(catalog):
@@ -234,13 +277,47 @@ def infoTreeUFOS(catalog):
 
 # Funciones utilizadas para comparar elementos dentro de una lista
 
-def compareDates(date1, date2):
+def compareDatesMap(date1, date2):
     """
     Compara dos fechas
     """
     if (date1 == date2):
         return 0
     elif (date1 > date2):
+        return 1
+    else:
+        return -1
+
+
+def compareCitiesMap(city1,city2):
+    """
+    Compara dos ciudades
+    """
+    if (city1 == city2):
+        return 0
+    elif (city1 > city2):
+        return 1
+    else:
+        return -1
+
+def compareDurationMap(dur1,dur2):
+    """
+    Compara dos duraciones
+    """
+    if (dur1 == dur2):
+        return 0
+    elif (dur1 > dur2):
+        return 1
+    else:
+        return -1
+
+def compareLatLongMap(l1,l2):
+    """
+    Compara dos longitude o latitudes
+    """
+    if (l1 == l2):
+        return 0
+    elif (l1 > l2):
         return 1
     else:
         return -1
@@ -254,6 +331,11 @@ def compareUFObyDate(ufo1,ufo2):
 
     return date1 < date2
 
+def compareUFObyCity(ufo1,ufo2):
+    return ufo1["city"] < ufo2["city"]
+
+def compareDuration(dur1,dur2):
+    return dur1<dur2
 
 # Funciones de ordenamiento
 

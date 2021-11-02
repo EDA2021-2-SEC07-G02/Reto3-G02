@@ -43,8 +43,8 @@ operación solicitada
 def printMenu():
     print("-"*50)
     print("Bienvenido")
-    print("0. Cargar información en el catálogo (Avance Lab8)")
-    print("1. Contar avistamientos en una ciudad (Avance Lab8) ")
+    print("0. Cargar información en el catálogo")
+    print("1. Contar avistamientos en una ciudad")
     print("2. Contar los avistamientos por duración ")
     print("3. Contar los avistamientos por Hora/Minutos del día ")
     print("4. Contar los avistamientos en un rango de fechas ")
@@ -105,15 +105,23 @@ def printCarga(lista,infoArbol=None,requerimiento=0):
 
 def printAvistamientosPorCiudad(respuesta,ciudad):
     listaAvistamientos=respuesta[0]
-    listaCiudades=respuesta[1]
+    cantidadCiudades=respuesta[1]
+    print("\nEn total hay",cantidadCiudades,"diferentes ciudades con avistamientos.")
+    print("\nEn total hay",lt.size(listaAvistamientos),"avistamientos en",ciudad,", a continuación se presentan los tres primeros y tres últimos de las lista\n")
+    keys=["datetime","city","state","country","shape",
+                        "duration (seconds)","comments","longitude","latitude"]
+    fieldNames=["Fecha","Ciudad","Estado","País","Forma",
+                        "Duración","Comentarios","Longitud","Latitud"]
+    maxWidth = {"Fecha":10,"Ciudad":10,"Estado":10,"País":10,"Forma":10,
+                        "Duración":10,"Comentarios":30,"Longitud":10,"Latitud":10}
 
-    print("\nLas cinco ciudades con más avistamientos son:\n")
-    keys=["city","tam"]
-    fieldNames=["Ciudad","Cantidad"]
-    maxWidth = {"Ciudad":10,"Cantidad":10}
-    printPrettyTable(listaCiudades,keys,fieldNames,maxWidth,sample=5,ultimas=False)    
+    printPrettyTable(listaAvistamientos,keys,fieldNames,maxWidth,sample=3,ultimas=True)
 
-    print("\n\nEn total hay",lt.size(listaAvistamientos),"en",ciudad,"a continuación se presentan los tres primeros y tres últimos de las lista\n")
+def printAvistamientosPorDuracion(respuesta,ciudad):
+    listaAvistamientos=respuesta[0]
+    cantidadDuraciones=respuesta[1]
+    print("\nEn total hay",cantidadDuraciones,"diferentes ciudades con avistamientos.")
+    print("\nEn total hay",lt.size(listaAvistamientos),"avistamientos en",ciudad,", a continuación se presentan los tres primeros y tres últimos de las lista\n")
     keys=["datetime","city","state","country","shape",
                         "duration (seconds)","comments","longitude","latitude"]
     fieldNames=["Fecha","Ciudad","Estado","País","Forma",
@@ -159,6 +167,9 @@ while True:
         pass
 
     elif int(inputs[0]) == 2:
+        dur_min=input("Ingrese la duración mínima: ")
+        dur_max=input("Ingrese la duración máxima: ")
+        controller.avistamientosPorDuracion(catalog,dur_min,dur_max)
         print("Por implementar ....")
 
     elif int(inputs[0]) == 3:
