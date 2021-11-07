@@ -70,3 +70,7 @@ def avistamientosPorDuracion(catalog, dur_min, dur_max):
 
 def avistamientosHoraMinuto(catalog,horaInicial,horaFinal):
     return model.avistamientosHoraMinuto(catalog,horaInicial,horaFinal)
+
+def grafAvistamientosZonaGeografica(catalog,long_min,long_max,lat_min,lat_max):
+    return model.grafAvistamientosZonaGeografica(catalog,long_min,long_max,lat_min,lat_max)
+

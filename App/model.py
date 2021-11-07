@@ -37,6 +37,7 @@ from DISClib.Algorithms.Sorting import selectionsort as selection
 assert cf
 import datetime
 import time
+import folium
 
 """
 Se define la estructura de un catálogo de videos. El catálogo tendrá dos listas, una para los videos, otra para las categorias de
@@ -367,8 +368,46 @@ def ListasRespuesta(catalog,tabla,requerimiento): #req 4 - función complementar
     return lista_respuesta,numeroAvistamientos
 
 def contarAvistamientosZonaGeografica(catalog,long_min,long_max,lat_min,lat_max):
+    """
+    Req 5
+    """
     
     pass
+
+def grafAvistamientosZonaGeografica(catalog,long_min,long_max,lat_min,lat_max): #listaCoordenadas)
+    #Norte/sur = Latitud
+    #Oriente/occidente=longitud
+    #Location=(Northing, Easting). = (latitud,longitud)
+
+
+    ###BORRAR LISTA COORDENADAS
+    listaCoordenadas=[{'datetime': '1998-12-05 20:30:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'unknown', 'duration (seconds)': '10.0', 'duration (hours/min)': '10 seconds', 'comments': 'Bright light shining directionally out of a cloudy shape or object&#44 got bright and smoky and then disappered.', 'date posted': '1999-01-28 00:00:00', 'latitude': '36.175', 'longitude': '-115.1363889'}, 
+                    {'datetime': '1999-07-19 21:30:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'oval', 'duration (seconds)': '600.0', 'duration (hours/min)': '5-10min.', 'comments': 'Two round bright white ufo&#39s were sighted on National airlines jet N7 316 Boeing 757 time 21;30 hrs just outside Las Vegas&#44Nevada one h', 'date posted': '1999-08-10 00:00:00', 'latitude': '36.175', 'longitude': '-115.1363889'}, 
+                    {'datetime': '2000-01-07 16:20:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'unknown', 'duration (seconds)': '600.0', 'duration (hours/min)': '10 min.', 'comments': 'hypersonic arcraft entering Nevada Test Site airspace', 'date posted': '2000-01-22 00:00:00', 'latitude': '36.175', 'longitude': '-115.1363889'},
+                     {'datetime': '2000-03-18 23:45:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'oval', 'duration (seconds)': '420.0', 'duration (hours/min)': '5-7 minutes', 'comments': 'I was on vacation in Vegas on 3-18. My friend and I were crossing from the NY hotel to Excalbur hotel when we came upon a crowd of 50 p', 'date posted': '2000-05-03 00:00:00', 'latitude': '36.175', 'longitude': '-115.1363889'}, 
+                     {'datetime': '2006-10-15 08:30:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'circle', 'duration (seconds)': '1200.0', 'duration (hours/min)': '20 minutes', 'comments': 'White Balls and Bright Light in the Vegas moring sky.', 'date posted': '2006-10-30 00:00:00', 'latitude': '36.175', 'longitude': '-115.1363889'}, 
+                     {'datetime': '2007-03-04 11:00:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'circle', 'duration (seconds)': '660.0', 'duration (hours/min)': '11:00', 'comments': 'One day&#44as i was looking outside of my room a circle shaped light beeming object appeared out of the blue&#44the light werew bright/the ai', 'date posted': '2007-04-27 00:00:00', 'latitude': '36.175', 'longitude': '-115.1363889'}, 
+                    {'datetime': '2013-04-05 08:30:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'formation', 'duration (seconds)': '420.0', 'duration (hours/min)': '7 minutes', 'comments': '5 Red orangish objects making formations over Las Vegas', 'date posted': '2013-05-15 00:00:00', 'latitude': '36.175', 'longitude': '-115.1363889'}]
+    media_longitud=(long_min+long_max)/2
+    media_latitud=(lat_min+lat_max)/2
+    map=folium.Map(location=[media_latitud,media_longitud]) #Se crea el mapa
+    tooltip = "Avistamiento"
+    n=1
+    for avistamiento in listaCoordenadas:
+        #"datetime","city","state","country","shape","duration (seconds)","duration (hours/min)",
+        # "comments","date posted","latitude","longitude"
+        latitud=avistamiento["latitude"]
+        longitud=avistamiento["longitude"]
+        nAvistamiento="Avistamiento #"+str(n)
+        fecha=avistamiento["datetime"]
+        duracion=avistamiento["duration (seconds)"]
+        forma= avistamiento["shape"]
+        infoAvistamiento=nAvistamiento + "La fecha es: "+fecha+" Su duración: " +duracion+ "Forma" +forma
+        folium.Marker(location=[latitud, longitud], 
+                        popup=infoAvistamiento,icon=folium.Icon(color="green"),).add_to(map)
+        n+=1
+
+    map
 
 #Funciones de consulta para el lab 8 - VIEW
 def infoTreeUFOS(catalog):

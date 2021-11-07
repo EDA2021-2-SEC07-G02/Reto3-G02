@@ -116,6 +116,7 @@ def printAvistamientosPorCiudad(respuesta,ciudad): #req1
                         "Duración","Comentarios","Longitud","Latitud"]
     maxWidth = {"Fecha":10,"Ciudad":10,"Estado":10,"País":10,"Forma":10,
                         "Duración":10,"Comentarios":30,"Longitud":10,"Latitud":10}
+    print(listaAvistamientos)
 
     printPrettyTable(listaAvistamientos,keys,fieldNames,maxWidth,sample=3,ultimas=True)
 
@@ -206,7 +207,8 @@ while True:
         print("Por implementar ....")
 
     elif int(inputs[0]) == 6:
-        print("Por implementar ....")
+        controller.grafAvistamientosZonaGeografica(catalog,-103.00,-109.05,31.33,37.00)
+        #print("Por implementar ....")
 
     else:
         sys.exit(0)
