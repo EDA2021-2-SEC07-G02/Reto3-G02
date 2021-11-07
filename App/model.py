@@ -47,7 +47,11 @@ los mismos.
 
 def newCatalog():
     catalog={'ufos':None,
-             'dateIndex':None}
+             'dateIndex':None,
+             "durationIndex":None,
+             "cityIndex":None,
+             "longitudIndex":None,
+             "hourIndex":None}
     catalog['ufos']=lt.newList('ARRAY_LIST')
     catalog['dateIndex']=om.newMap(omaptype='RBT',
                                    comparefunction=compareDatesMap)
@@ -57,6 +61,8 @@ def newCatalog():
                                    comparefunction=compareDurationMap)
     catalog['longitudIndex']=om.newMap(omaptype='RBT',
                                    comparefunction=compareLatLongMap)
+    catalog["hourIndex"]=om.newMap(omaptype='RBT',
+                                   comparefunction=compareHoursMap)
     return catalog
 
 
@@ -69,6 +75,7 @@ def addUfo(catalog,ufo):
     updateIndexCity(catalog,ufo,posicion)
     updateDuration(catalog,ufo,posicion)
     updateLongitud(catalog,ufo,posicion)
+    updateIndexHour(catalog,ufo,posicion)
 
 
 def updateIndexDate(catalog,ufo,posicion):
@@ -121,6 +128,17 @@ def updateLongitud(catalog,ufo,posicion):
         om.put(catalog["longitudIndex"],longitud,mapLat)
 
 
+def updateIndexHour(catalog,ufo,posicion):
+    ufoDateTime=datetime.datetime.strptime(ufo["datetime"][11:-3],'%H:%M').time() #Key
+    #fechaTime=datetime.datetime.strptime(ufo["datetime"][:10], '%Y-%m-%d').date()
+    fechaTime=ufo["datetime"]#[:10]
+    info={"pos":posicion,"fecha":fechaTime} #elemento de la lista value
+    if om.contains(catalog['hourIndex'],ufoDateTime):
+        lt.addLast(om.get(catalog['hourIndex'],ufoDateTime)["value"],info) #se agrega la pos
+    else:
+        lista=lt.newList("ARRAY_LIST")
+        lt.addLast(lista,info)
+        om.put(catalog['hourIndex'],ufoDateTime,lista)
 
 
 # Funciones para creacion de datos
@@ -133,9 +151,7 @@ def avistamientosPorCiudad(catalog,ciudad): # Requerimiento Grupal 1: Contar los
     listaAvistamiento=lt.newList("ARRAY_LIST")
     for indice in lt.iterator(ufos):
         lt.addLast(listaAvistamiento,lt.getElement(catalog["ufos"],indice))
-    listaAvistamiento=selection.sortEdit(listaAvistamiento,compareUFObyDate,3,
-                                        ordenarInicio=True,ordenarFinal=True) #Lista editada con selection 
-
+    listaAvistamiento=sortList(listaAvistamiento,compareUFObyDate,1)
     return listaAvistamiento, numeroCiudades
 
 def avistamientosPorDuracion(catalog,segundos_min,segundos_max): # Requerimiento Individual 2: Contar avistamientos por duración
@@ -159,6 +175,96 @@ def avistamientosPorDuracion(catalog,segundos_min,segundos_max): # Requerimiento
 
     return listaAvistamientos, numeroDuraciones, mayorDuracion, cantidadUfosMayorDuracion
 
+def avistamientosHoraMinuto(catalog,horaInicial,horaFinal): #req individual 3
+    """
+    Función principal requerimiento 3
+    1. Se obtiene la hora máxima con maxKey.
+    2. Se obtienen las horas dentro del rango ingresado por el usuario
+    usuario
+    Parámetros:
+        catalog: catálogo con árboles y lista relacionados a avistamientos de UFOs
+        horaInicial: Hora inicial dada por el usuario
+        horaFinal: Hora Final dada por el usuario
+    Retorno:
+        rangoHoras: lista con los ufos que están dentro del rango de esa hora
+        listaRespuesta: lista con los 3 primeros y 3 últimos UFOs dentro de ese rango
+        contadorAvistamientos: contador de avistamientos ufos dentro del rango de fechas
+        UltimaHora: hora máxima de avistamiento de UFOs
+    """
+    #Hora máxima
+    horaMaxima=om.maxKey(catalog["hourIndex"])
+    ValueUltimaHora=om.get(catalog["hourIndex"],horaMaxima)
+    print(ValueUltimaHora)
+
+    UltimaHora=lt.newList("ARRAY_LIST")
+    lt.addLast(UltimaHora,{"hour":horaMaxima.strftime('%H:%M'),
+                            "count":ValueUltimaHora["value"]["size"]})
+
+    #Avistamientos dentro del rango de horas usuario
+    horaInicialTime=datetime.datetime.strptime(horaInicial,'%H:%M').time()
+    horaFinalTime=datetime.datetime.strptime(horaFinal,'%H:%M').time()
+    rangoHoras=om.values(catalog["hourIndex"],horaInicialTime,horaFinalTime)
+    listaOrdenadaAvistamientos=listaRespuestaHoras(catalog, rangoHoras)
+    listaRespuesta=listaOrdenadaAvistamientos[0]
+    contadorAvistamientos=listaOrdenadaAvistamientos[1]
+    return rangoHoras,listaRespuesta,contadorAvistamientos,UltimaHora
+
+def listaRespuestaHoras(catalog, listaRangoHoras): #función complementaria req3
+    """
+    Función complementaria requerimiento 3
+
+    Se recorre la lista de rango de horas para contar el número de
+    avistamientos, al mismo tiempo, se agregan las 3 primeras y 3 
+    últimas horas a una nueva lista (lista6Horas). Seguido a esto,
+    se obtienen los UFOs en orden crónologico, para esto se hace
+    un ordenamiento en la primera y última hora cuando tienen +3 
+    fechas, para otros casos [....]
+
+    """
+    size=listaRangoHoras["size"]
+    pos=1
+    lista6Horas=lt.newList("ARRAY_LIST")
+    contadorAvistamientos=0
+    for hora in lt.iterator(listaRangoHoras):
+        if pos<3 or pos>=size-3: #Se sacan las 3 primeras y 3 últimas horas dentro del rango de horas
+            lt.addLast(lista6Horas,hora)
+        contadorAvistamientos+=hora["size"]
+        pos+=1
+    
+    i=1
+    listaRespuesta=lt.newList("ARRAY_LIST")
+    recorrer=True
+    while recorrer and i<=lista6Horas["size"]:
+        elementoLista=lt.getElement(lista6Horas,i)
+        if (i==1 and listaRespuesta["size"]<3 and elementoLista["size"]>=3):
+            cont=0 #elementos agregados
+            pos=1 #pos
+            sortList(elementoLista,compareDateHour,sortType=1,ordenarInicio=True,ordenarFinal=False)
+            while cont<=3:
+                elementoOrdenado=lt.getElement(elementoLista,pos)
+                ufo=lt.getElement(catalog['ufos'],elementoOrdenado["pos"])
+                lt.addLast(listaRespuesta,ufo)
+                cont+=1
+                pos+=1
+        elif (i==6 and listaRespuesta["size"]>=3) and elementoLista["size"]>=3:
+            cont=1 #elementos agregados
+            pos=elementoLista["size"] #POS
+            sortList(elementoLista,compareDateHour,sortType=1,ordenarInicio=False,ordenarFinal=True)
+            while cont<=3:
+                elementoOrdenado=lt.getElement(elementoLista,pos)
+                ufo=lt.getElement(catalog['ufos'],elementoOrdenado["pos"])
+                lt.addLast(listaRespuesta,ufo)
+                pos-=1
+                cont+=1
+        i+=1
+    # print("**************************************************")
+    # print(lista6Horas,contadorAvistamientos)
+    # print("**************************************************")
+    # print("*********UFOSSSS*****************************************")
+    # print(listaRespuesta)
+    # print("**************************************************")
+    return listaRespuesta, contadorAvistamientos
+
 
 def avistamientoRangoFechas(catalog,fechaInicial,fechaFinal): #req grupal 4
     """
@@ -178,16 +284,6 @@ def avistamientoRangoFechas(catalog,fechaInicial,fechaFinal): #req grupal 4
     date2=(datetime.datetime.strptime(fechaFinal, '%Y-%m-%d')).date()
 
     sizeArbol=om.size(catalog["dateIndex"])
-
-    #Ultimas fechas #1era manera
-    # listaFechasArbol=om.keySet(catalog["dateIndex"])
-    # keysUltimasFechas=lt.subList(listaFechasArbol,1,5)
-    # respuestaUltimasFechas=lt.newList("ARRAY_LIST")
-    # for fechaUltima in lt.iterator(keysUltimasFechas):
-    #     infoFecha=om.get(catalog["dateIndex"],fechaUltima)
-    #     fechaStr=fechaUltima.strftime('%Y-%m-%d') #se convierte de datetime a str
-    #     elemento={"date":fechaStr,"count":infoFecha["value"]["size"]}
-    #     lt.addLast(respuestaUltimasFechas,elemento)
     
     #actualización reto 
     minkey=om.minKey(catalog["dateIndex"])
@@ -196,11 +292,13 @@ def avistamientoRangoFechas(catalog,fechaInicial,fechaFinal): #req grupal 4
     lt.addLast(respuestaUltimasFechas,{"date":minkey.strftime('%Y-%m-%d'),
                                         "count":infoMinKey["size"]})
     #Fechas dentro del rango brindado por el usuario
-    avistamientoRango=om.keys(catalog["dateIndex"],date1,date2)
-    diasAvistamientos=avistamientoRango["size"]
-    listaRespuestaView=ListasRespuesta(catalog,avistamientoRango,"req4")
+    avistamientoRango=om.values(catalog["dateIndex"],date1,date2)
+    diasAvistamientos=avistamientoRango["size"] #Días distintos con avistamientos
+    contadorYLista=ListasRespuesta(catalog,avistamientoRango,"req4")
+    listaRespuestaView=contadorYLista[0] #3 primeros y 3 últimos avistamientos
+    contadorAvistamientos=contadorYLista[1] #Contador del total de avistamientos en el rango
 
-    return respuestaUltimasFechas, avistamientoRango,diasAvistamientos,listaRespuestaView,sizeArbol
+    return respuestaUltimasFechas, avistamientoRango,diasAvistamientos,listaRespuestaView,sizeArbol,contadorAvistamientos
 
 def ListasRespuesta(catalog,tabla,requerimiento): #req 4 - función complementaria
     """
@@ -219,17 +317,20 @@ def ListasRespuesta(catalog,tabla,requerimiento): #req 4 - función complementar
     
     """
     keys=tabla
-    if requerimiento=="req4": #se convierte de single linked a array, !!!modificar después
+    numeroAvistamientos=0
+    if requerimiento=="req4": #se convierte de single linked a array
         keys=lt.newList("ARRAY_LIST")
         for key in lt.iterator(tabla): 
             lt.addLast(keys,key)
+            numeroAvistamientos+=key["size"] #contador de avistamientos
 
     recorrer=True
     pos=1
     lista_respuesta=lt.newList("ARRAY_LIST")
     while recorrer and lista_respuesta["size"]<=6:
         key_actual=lt.getElement(keys,pos)
-        lista_en_pos=om.get(catalog["dateIndex"],key_actual)["value"] #Se obtiene la lista correspondiente a esa pos
+        lista_en_pos=key_actual
+        #lista_en_pos=om.get(catalog["dateIndex"],key_actual)["value"] #Se obtiene la lista correspondiente a esa pos
         pos_j=1
         
         condiciones_elementos= True
@@ -261,14 +362,15 @@ def ListasRespuesta(catalog,tabla,requerimiento): #req 4 - función complementar
             pos-=1
     
     if requerimiento=="req4": #se ordenan los últimos 3 UFOS por fecha
-        selection.sortEdit(lista_respuesta,compareUFObyDate,3,ordenarInicio=False,ordenarFinal=True)
-    return lista_respuesta
+        sortList(lista_respuesta,compareUFObyDate,sortType=1,
+                ordenarInicio=False,ordenarFinal=True)
+    return lista_respuesta,numeroAvistamientos
 
 def contarAvistamientosZonaGeografica(catalog,long_min,long_max,lat_min,lat_max):
     
     pass
 
-#Funciones de consulta para el lab 8
+#Funciones de consulta para el lab 8 - VIEW
 def infoTreeUFOS(catalog):
     sizeUFOs=lt.size(catalog["ufos"])
     alturaCityIndex=om.height(catalog['cityIndex'])
@@ -322,6 +424,17 @@ def compareLatLongMap(l1,l2):
     else:
         return -1
 
+def compareHoursMap(hour1, hour2): #req 3 map
+    """
+    Compara dos horas
+    """
+    if (hour1 == hour2):
+        return 0
+    elif (hour1 > hour2):
+        return 1
+    else:
+        return -1
+
 def compareUFObyDate(ufo1,ufo2):
     """
     Compara dos fechas
@@ -337,26 +450,33 @@ def compareUFObyCity(ufo1,ufo2):
 def compareDuration(dur1,dur2):
     return dur1<dur2
 
+def compareDateHour(fecha1,fecha2): #req3
+    fecha1dt= datetime.datetime.strptime(fecha1["fecha"][:10], '%Y-%m-%d').date()
+    fecha2dt= datetime.datetime.strptime(fecha2["fecha"][:10], '%Y-%m-%d').date()
+    return fecha1dt<fecha2dt
+
+
 # Funciones de ordenamiento
 
-def sortList(lista,cmpFunction,sortType=3):
+def sortList(lista,cmpFunction,sortType=1,ordenarInicio=True,
+            ordenarFinal=True,posAOrdenar=3):
     """
-    ####### FUNCIÓN MODIFICADA PARA HACER PRUEBAS #####
     Función de ordenamiento que se usará en distintos requerimientos dependiendo
     del ordenamiento deseado
     Parámetros: 
         lista: lista que se ordenara
         cmpFunction: función de comparación
-        sortType: tipo de ordenamiento (1)Insertion - (2)Selection - (3)Merge - (4)Quick
+        sortType: tipo de ordenamiento (1)Selection Edit - (2)Merge
     Retorno:
         lista ordenada por insertion
     """
-    if sortType == 1:
-        sorted_list= selection.sort(lista,cmpFunction) 
+    if sortType == 1: #Selection Sort Edit
+        sorted_list= selection.sortEdit(lista,cmpFunction,
+                                        posAOrdenar,
+                                        ordenarInicio,
+                                        ordenarFinal)
     elif sortType == 2:
         sorted_list= sa.sort(lista,cmpFunction)
-    elif sortType == 3:
-        sorted_list= ms.sort(lista,cmpFunction)
     else:
-        sorted_list= ms.sort(lista,cmpFunction)
+        sorted_list=sa.sort(lista,cmpFunction)
     return sorted_list

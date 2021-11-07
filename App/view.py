@@ -87,12 +87,14 @@ def printPrettyTable(lista, keys, field_names, max_width, sample=3, ultimas=Fals
     print(artPretty)
 
 def printCarga(lista,infoArbol=None,requerimiento=0):
+    samplePrint=3 #3 para el resto de reqs, 5 para la carga
     if requerimiento==0:
-        print("En total se registraron "+ str(infoArbol[0])+" avistamientos de UFOs.") #LAB8 los datos característicos (altura y número de elementos)
-        print("Altura Árbol CityIndex",infoArbol[1])
-        print("Hay "+ str(infoArbol[2]) + " ciudades con avistamientos de UFOs\n")
+        print("Se han cargado "+ str(infoArbol[0])+" avistamientos de UFOs al catálogo.") #LAB8 los datos característicos (altura y número de elementos)
+        # print("Altura Árbol CityIndex",infoArbol[1])
+        # print("Hay "+ str(infoArbol[2]) + " ciudades con avistamientos de UFOs\n")
+        samplePrint=5
 
-    print("\nA continuación se presentan 3 primeros registros y 3 últimos registros")
+    print("\nA continuación se presentan "+str(samplePrint)+" primeros registros y "+str(samplePrint)+" últimos registros")
 
     keys=["datetime","city","state","country","shape",
                         "duration (seconds)","comments","longitude","latitude"]
@@ -101,9 +103,9 @@ def printCarga(lista,infoArbol=None,requerimiento=0):
     maxWidth = {"Fecha":10,"Ciudad":10,"Estado":10,"País":10,"Forma":10,
                         "Duración":10,"Comentarios":30,"Longitud":10,"Latitud":10}
 
-    printPrettyTable(lista,keys,fieldNames,maxWidth,sample=3,ultimas=True)
+    printPrettyTable(lista,keys,fieldNames,maxWidth,sample=samplePrint,ultimas=True)
 
-def printAvistamientosPorCiudad(respuesta,ciudad):
+def printAvistamientosPorCiudad(respuesta,ciudad): #req1
     listaAvistamientos=respuesta[0]
     cantidadCiudades=respuesta[1]
     print("\nEn total hay",cantidadCiudades,"diferentes ciudades con avistamientos.")
@@ -117,7 +119,7 @@ def printAvistamientosPorCiudad(respuesta,ciudad):
 
     printPrettyTable(listaAvistamientos,keys,fieldNames,maxWidth,sample=3,ultimas=True)
 
-def printAvistamientosPorDuracion(respuesta,ciudad):
+def printAvistamientosPorDuracion(respuesta,ciudad): #req 2
     listaAvistamientos=respuesta[0]
     cantidadDuraciones=respuesta[1]
     print("\nEn total hay",cantidadDuraciones,"diferentes ciudades con avistamientos.")
@@ -131,7 +133,21 @@ def printAvistamientosPorDuracion(respuesta,ciudad):
 
     printPrettyTable(listaAvistamientos,keys,fieldNames,maxWidth,sample=3,ultimas=True)
 
-def printAvistamientosFechas(respuesta,fechaInicial,fechaFinal):
+def printAvistamientosPorHora(respuesta,hora1,hora2): #req3
+    numeroAvistamientos=respuesta[2]
+    listaAvistamientos=respuesta[1] #avistamientos orden cronologico
+    respuestaUltimaHora=respuesta[3]
+
+    print("\nLa última hora de avistamiento es: ") 
+    keys=["hour","count"]
+    maxWidth = {"hour":12,"count":10}
+    fieldNames=["hour","count"]
+    printPrettyTable(respuestaUltimaHora,keys,fieldNames,maxWidth,sample=1)
+
+    print("\nEn total hay "+str(numeroAvistamientos)+" avistamientos de UFOs en el rango de horas: "+hora1+" - "+hora2)
+    printCarga(listaAvistamientos,requerimiento=3)
+
+def printAvistamientosFechas(respuesta,fechaInicial,fechaFinal): #req 4
     print("\n\nHay "+str(respuesta[4])+" avistamientos de UFOs registrados en fechas distintas")
     print("\nLas últimas fecha de avistamiento es: ") #print("\nLas últimas 5 fechas son: ")
     keys=["date","count"]
@@ -139,7 +155,8 @@ def printAvistamientosFechas(respuesta,fechaInicial,fechaFinal):
     fieldNames=["date","count"]
     printPrettyTable(respuesta[0],keys,fieldNames,maxWidth,sample=1)
 
-    print("Existen "+str(respuesta[2])+" avistamientos de UFOs en el rango de fechas: "+fechaInicial+" - "+fechaFinal)
+    print("Existen "+str(respuesta[5])+" avistamientos de UFOs en el rango de fechas: "+fechaInicial+" - "+fechaFinal)
+    print("Existen "+str(respuesta[2]) + " días distintos con avistamientos en el rango de fechas: "+ fechaInicial+" - "+fechaFinal)
     print("A continuación se presentan los tres primeros y tres últimos avistamientos en este rango de fechas")
     printCarga(respuesta[3],requerimiento=4)
 
@@ -173,7 +190,11 @@ while True:
         print("Por implementar ....")
 
     elif int(inputs[0]) == 3:
-        print("Por implementar ....")
+        hora1="20:45"#input("Ingrese la hora inicial (HH:MM): ")
+        hora2="23:15"#input("Ingrese la hora final (HH:MM): ")
+        respuesta=controller.avistamientosHoraMinuto(catalog,hora1,hora2)
+        printAvistamientosPorHora(respuesta,hora1,hora2)
+        #print(respuesta)
 
     elif int(inputs[0]) == 4:
         fechaInicial=input("Ingrese la fecha inicial (AAAA-MM-DD): ")

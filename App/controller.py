@@ -67,3 +67,6 @@ def avistamientosPorCiudad(catalog, ciudad):
 
 def avistamientosPorDuracion(catalog, dur_min, dur_max):
     return model.avistamientosPorDuracion(catalog,dur_min,dur_max)
+
+def avistamientosHoraMinuto(catalog,horaInicial,horaFinal):
+    return model.avistamientosHoraMinuto(catalog,horaInicial,horaFinal)
