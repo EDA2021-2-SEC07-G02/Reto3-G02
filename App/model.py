@@ -25,6 +25,7 @@
  """
 
 
+import DISClib
 from DISClib.DataStructures.bst import maxKey
 import config as cf
 from DISClib.ADT import list as lt
@@ -195,7 +196,6 @@ def avistamientosHoraMinuto(catalog,horaInicial,horaFinal): #req individual 3
     #Hora máxima
     horaMaxima=om.maxKey(catalog["hourIndex"])
     ValueUltimaHora=om.get(catalog["hourIndex"],horaMaxima)
-    print(ValueUltimaHora)
 
     UltimaHora=lt.newList("ARRAY_LIST")
     lt.addLast(UltimaHora,{"hour":horaMaxima.strftime('%H:%M'),
@@ -205,66 +205,36 @@ def avistamientosHoraMinuto(catalog,horaInicial,horaFinal): #req individual 3
     horaInicialTime=datetime.datetime.strptime(horaInicial,'%H:%M').time()
     horaFinalTime=datetime.datetime.strptime(horaFinal,'%H:%M').time()
     rangoHoras=om.values(catalog["hourIndex"],horaInicialTime,horaFinalTime)
-    listaOrdenadaAvistamientos=listaRespuestaHoras(catalog, rangoHoras)
+    listaOrdenadaAvistamientos=ListasRespuesta(catalog, rangoHoras,requerimiento="req3")
     listaRespuesta=listaOrdenadaAvistamientos[0]
     contadorAvistamientos=listaOrdenadaAvistamientos[1]
     return rangoHoras,listaRespuesta,contadorAvistamientos,UltimaHora
 
-def listaRespuestaHoras(catalog, listaRangoHoras): #función complementaria req3
-    """
-    Función complementaria requerimiento 3
 
-    Se recorre la lista de rango de horas para contar el número de
-    avistamientos, al mismo tiempo, se agregan las 3 primeras y 3 
-    últimas horas a una nueva lista (lista6Horas). Seguido a esto,
-    se obtienen los UFOs en orden crónologico, para esto se hace
-    un ordenamiento en la primera y última hora cuando tienen +3 
-    fechas, para otros casos [....]
-
+def selectionPlace(lst,cmpfunction): #Funcion complementaria req 3
     """
-    size=listaRangoHoras["size"]
-    pos=1
-    lista6Horas=lt.newList("ARRAY_LIST")
-    contadorAvistamientos=0
-    for hora in lt.iterator(listaRangoHoras):
-        if pos<3 or pos>=size-3: #Se sacan las 3 primeras y 3 últimas horas dentro del rango de horas
-            lt.addLast(lista6Horas,hora)
-        contadorAvistamientos+=hora["size"]
-        pos+=1
+    ***FUNCIÓN EDITADA DE LA DISCLIB (ordenamiento selection)***
+
+    La función recorrerá toda una lista, tomará el máximo o mínimo 
+    dependiendo de la funciín de comparación, cuando termine de hacer 
+    el recorrido se cambiará de lugar el elemento que se está buscando con
+    la última pos. Después de esto se elimina el elemento de la 
+    última posición y se retornará este elemento eliminado.
     
-    i=1
-    listaRespuesta=lt.newList("ARRAY_LIST")
-    recorrer=True
-    while recorrer and i<=lista6Horas["size"]:
-        elementoLista=lt.getElement(lista6Horas,i)
-        if (i==1 and listaRespuesta["size"]<3 and elementoLista["size"]>=3):
-            cont=0 #elementos agregados
-            pos=1 #pos
-            sortList(elementoLista,compareDateHour,sortType=1,ordenarInicio=True,ordenarFinal=False)
-            while cont<=3:
-                elementoOrdenado=lt.getElement(elementoLista,pos)
-                ufo=lt.getElement(catalog['ufos'],elementoOrdenado["pos"])
-                lt.addLast(listaRespuesta,ufo)
-                cont+=1
-                pos+=1
-        elif (i==6 and listaRespuesta["size"]>=3) and elementoLista["size"]>=3:
-            cont=1 #elementos agregados
-            pos=elementoLista["size"] #POS
-            sortList(elementoLista,compareDateHour,sortType=1,ordenarInicio=False,ordenarFinal=True)
-            while cont<=3:
-                elementoOrdenado=lt.getElement(elementoLista,pos)
-                ufo=lt.getElement(catalog['ufos'],elementoOrdenado["pos"])
-                lt.addLast(listaRespuesta,ufo)
-                pos-=1
-                cont+=1
-        i+=1
-    # print("**************************************************")
-    # print(lista6Horas,contadorAvistamientos)
-    # print("**************************************************")
-    # print("*********UFOSSSS*****************************************")
-    # print(listaRespuesta)
-    # print("**************************************************")
-    return listaRespuesta, contadorAvistamientos
+    """
+    size = lt.size(lst)
+    pos1 = 1
+    minimum = pos1    # minimun tiene el menor elemento
+    pos2 = pos1 + 1
+    while (pos2 <= size):
+        if (cmpfunction(lt.getElement(lst, pos2),
+           (lt.getElement(lst, minimum)))):
+            minimum = pos2  # minimum = posición elemento más pequeño
+        pos2 += 1
+    lt.exchange(lst, size, minimum)  # elemento más pequeño -> elem pos1
+    minimo=lt.getElement(lst, size)
+    lt.removeLast(lst)
+    return minimo
 
 
 def avistamientoRangoFechas(catalog,fechaInicial,fechaFinal): #req grupal 4
@@ -303,13 +273,17 @@ def avistamientoRangoFechas(catalog,fechaInicial,fechaFinal): #req grupal 4
 
 def ListasRespuesta(catalog,tabla,requerimiento): #req 4 - función complementaria
     """
+    ### FUNCIÓN COMPLEMENTARIA REQ4 Y REQ3
     Función usado para obtener los 3 primeros y últimos elementos
     Primero se recorre las posiciones de los keys de una tabla, seguido a esto
     se obtiene su valor correspondiente, el cual será una lista (lista_en_pos).
-    Después de esto se recorrerá sobre esta lista (lista_en_pos) y se añadirán elementos
+    Después de esto se recorrerá sobre esta lista (lista_en_pos) y se añadirán elementos*
     a la lista de respuesta. Al tener los 3 primeros elementos se pasará a la última posición
     de la tabla para obtener los 3 últimos.
     La función se detendrá hasta tener 6 elementos en la lista de respuesta.
+    
+    *los elementos en el caso de ser del requerimiento 4 se tomará el máximo o mínimo
+    de la lista dependiendo de la posición
     
     Parámetros
         tabla: lista con keys -> árbol (<key,value>)
@@ -317,19 +291,28 @@ def ListasRespuesta(catalog,tabla,requerimiento): #req 4 - función complementar
         lista_respuesta: lista con los 3 primeros y 3 últimos elementos
     
     """
-    keys=tabla
+
+    size=tabla["size"]
+    i=1
+    ufosPosCadaElemento=tabla
     numeroAvistamientos=0
-    if requerimiento=="req4": #se convierte de single linked a array
-        keys=lt.newList("ARRAY_LIST")
+
+    #Se obtiene una array lista con los 3 primeros y 3 últimos, además se cuentan los avistamientos
+    if requerimiento=="req3" or requerimiento=="req4":
+        ufosPosCadaElemento=lt.newList("ARRAY_LIST")
         for key in lt.iterator(tabla): 
-            lt.addLast(keys,key)
+            if i<=3 or i>size-3: #Se sacan las 3 primeras y 3 últimas horas dentro del rango de horas
+                lt.addLast(ufosPosCadaElemento,key)
             numeroAvistamientos+=key["size"] #contador de avistamientos
+            i+=1
+    
+    
 
     recorrer=True
     pos=1
     lista_respuesta=lt.newList("ARRAY_LIST")
     while recorrer and lista_respuesta["size"]<=6:
-        key_actual=lt.getElement(keys,pos)
+        key_actual=lt.getElement(ufosPosCadaElemento,pos)
         lista_en_pos=key_actual
         #lista_en_pos=om.get(catalog["dateIndex"],key_actual)["value"] #Se obtiene la lista correspondiente a esa pos
         pos_j=1
@@ -338,14 +321,24 @@ def ListasRespuesta(catalog,tabla,requerimiento): #req 4 - función complementar
         while condiciones_elementos and pos_j<=lista_en_pos["size"]: #Se detendrá el recorrido de cada key
             
             pos_UFOlist=lt.getElement(lista_en_pos,pos_j)
-            elemento=lt.getElement(catalog["ufos"],pos_UFOlist) #elemento que se agrega en la lista de respuesta
+            if requerimiento=="req4":
+                elemento=lt.getElement(catalog["ufos"],pos_UFOlist) #elemento que se agrega en la lista de respuesta
+            elif requerimiento=="req3":
+                if pos<=3:
+                    cmp=compareDateHourMin
+                else:
+                    cmp=compareDateHourMax
+                elementoPos=selectionPlace(lista_en_pos,cmp)
+                #print(f'***********ElementoPos{elementoPos}')
+                elemento=lt.getElement(catalog["ufos"],elementoPos["pos"])
+            #elemento=lt.getElement(catalog["ufos"],pos_UFOlist) #elemento que se agrega en la lista de respuesta
             lt.addLast(lista_respuesta,elemento)
             pos_j+=1
 
-            if lista_respuesta["size"]>=6 and (pos>(keys["size"]-5)+1) and (keys["size"]>=3+1): #se cumple siempre que la lista sea >3
+            if lista_respuesta["size"]>=6 and (pos>(ufosPosCadaElemento["size"]-5)+1) and (ufosPosCadaElemento["size"]>=3+1): #se cumple siempre que la lista sea >3
                 condiciones_elementos=False
                 
-            elif lista_respuesta["size"]>=3 and pos<3+1 and keys["size"]>=3+1: #se cumple siempre que la lista sea>3
+            elif lista_respuesta["size"]>=3 and pos<3+1 and ufosPosCadaElemento["size"]>=3+1: #se cumple siempre que la lista sea>3
                 condiciones_elementos=False
             
             elif lista_respuesta["size"]>=6:
@@ -354,16 +347,16 @@ def ListasRespuesta(catalog,tabla,requerimiento): #req 4 - función complementar
         if lista_respuesta["size"]>=6:
             recorrer=False
         if pos==3+1 or lista_respuesta["size"]==3: #Se pasa a la última posición cuando se han obtenido los 3 primeros elementos 
-            pos=keys["size"]
+            pos=ufosPosCadaElemento["size"]
             
         elif lista_respuesta["size"]<=3 and pos<3+1:
             pos+=1
             
-        elif lista_respuesta["size"]>3 and pos>(keys["size"]-5+1):
+        elif lista_respuesta["size"]>3 and pos>(ufosPosCadaElemento["size"]-5+1):
             pos-=1
     
-    if requerimiento=="req4": #se ordenan los últimos 3 UFOS por fecha
-        sortList(lista_respuesta,compareUFObyDate,sortType=1,
+    #SE ORDENAN LOS ÚLTIMOS 3 ELEMENTOS
+    sortList(lista_respuesta,compareUFObyDate,sortType=1,
                 ordenarInicio=False,ordenarFinal=True)
     return lista_respuesta,numeroAvistamientos
 
@@ -378,36 +371,46 @@ def grafAvistamientosZonaGeografica(catalog,long_min,long_max,lat_min,lat_max): 
     #Norte/sur = Latitud
     #Oriente/occidente=longitud
     #Location=(Northing, Easting). = (latitud,longitud)
-
+    # import folium
+    # import config as cf
+    long_min=-120
+    long_max=-110
+    lat_min=30
+    lat_max=40
 
     ###BORRAR LISTA COORDENADAS
-    listaCoordenadas=[{'datetime': '1998-12-05 20:30:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'unknown', 'duration (seconds)': '10.0', 'duration (hours/min)': '10 seconds', 'comments': 'Bright light shining directionally out of a cloudy shape or object&#44 got bright and smoky and then disappered.', 'date posted': '1999-01-28 00:00:00', 'latitude': '36.175', 'longitude': '-115.1363889'}, 
-                    {'datetime': '1999-07-19 21:30:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'oval', 'duration (seconds)': '600.0', 'duration (hours/min)': '5-10min.', 'comments': 'Two round bright white ufo&#39s were sighted on National airlines jet N7 316 Boeing 757 time 21;30 hrs just outside Las Vegas&#44Nevada one h', 'date posted': '1999-08-10 00:00:00', 'latitude': '36.175', 'longitude': '-115.1363889'}, 
-                    {'datetime': '2000-01-07 16:20:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'unknown', 'duration (seconds)': '600.0', 'duration (hours/min)': '10 min.', 'comments': 'hypersonic arcraft entering Nevada Test Site airspace', 'date posted': '2000-01-22 00:00:00', 'latitude': '36.175', 'longitude': '-115.1363889'},
-                     {'datetime': '2000-03-18 23:45:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'oval', 'duration (seconds)': '420.0', 'duration (hours/min)': '5-7 minutes', 'comments': 'I was on vacation in Vegas on 3-18. My friend and I were crossing from the NY hotel to Excalbur hotel when we came upon a crowd of 50 p', 'date posted': '2000-05-03 00:00:00', 'latitude': '36.175', 'longitude': '-115.1363889'}, 
-                     {'datetime': '2006-10-15 08:30:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'circle', 'duration (seconds)': '1200.0', 'duration (hours/min)': '20 minutes', 'comments': 'White Balls and Bright Light in the Vegas moring sky.', 'date posted': '2006-10-30 00:00:00', 'latitude': '36.175', 'longitude': '-115.1363889'}, 
-                     {'datetime': '2007-03-04 11:00:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'circle', 'duration (seconds)': '660.0', 'duration (hours/min)': '11:00', 'comments': 'One day&#44as i was looking outside of my room a circle shaped light beeming object appeared out of the blue&#44the light werew bright/the ai', 'date posted': '2007-04-27 00:00:00', 'latitude': '36.175', 'longitude': '-115.1363889'}, 
+    listaCoordenadas=[{'datetime': '1998-12-05 20:30:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'unknown', 'duration (seconds)': '10.0', 'duration (hours/min)': '10 seconds', 'comments': 'Bright light shining directionally out of a cloudy shape or object&#44 got bright and smoky and then disappered.', 'date posted': '1999-01-28 00:00:00', 'latitude': '34.175', 'longitude': '-115.1363889'}, 
+                    {'datetime': '1999-07-19 21:30:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'oval', 'duration (seconds)': '600.0', 'duration (hours/min)': '5-10min.', 'comments': 'Two round bright white ufo&#39s were sighted on National airlines jet N7 316 Boeing 757 time 21;30 hrs just outside Las Vegas&#44Nevada one h', 'date posted': '1999-08-10 00:00:00', 'latitude': '33.175', 'longitude': '-113.1363889'}, 
+                    {'datetime': '2000-01-07 16:20:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'unknown', 'duration (seconds)': '600.0', 'duration (hours/min)': '10 min.', 'comments': 'hypersonic arcraft entering Nevada Test Site airspace', 'date posted': '2000-01-22 00:00:00', 'latitude': '30.175', 'longitude': '-110.1363889'},
+                        {'datetime': '2000-03-18 23:45:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'oval', 'duration (seconds)': '420.0', 'duration (hours/min)': '5-7 minutes', 'comments': 'I was on vacation in Vegas on 3-18. My friend and I were crossing from the NY hotel to Excalbur hotel when we came upon a crowd of 50 p', 'date posted': '2000-05-03 00:00:00', 'latitude': '35.175', 'longitude': '-116.1363889'}, 
+                        {'datetime': '2006-10-15 08:30:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'circle', 'duration (seconds)': '1200.0', 'duration (hours/min)': '20 minutes', 'comments': 'White Balls and Bright Light in the Vegas moring sky.', 'date posted': '2006-10-30 00:00:00', 'latitude': '32.175', 'longitude': '-120.1363889'}, 
+                        {'datetime': '2007-03-04 11:00:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'circle', 'duration (seconds)': '660.0', 'duration (hours/min)': '11:00', 'comments': 'One day&#44as i was looking outside of my room a circle shaped light beeming object appeared out of the blue&#44the light werew bright/the ai', 'date posted': '2007-04-27 00:00:00', 'latitude': '37.175', 'longitude': '-117.1363889'}, 
                     {'datetime': '2013-04-05 08:30:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'formation', 'duration (seconds)': '420.0', 'duration (hours/min)': '7 minutes', 'comments': '5 Red orangish objects making formations over Las Vegas', 'date posted': '2013-05-15 00:00:00', 'latitude': '36.175', 'longitude': '-115.1363889'}]
     media_longitud=(long_min+long_max)/2
     media_latitud=(lat_min+lat_max)/2
-    map=folium.Map(location=[media_latitud,media_longitud]) #Se crea el mapa
+    mapgraf=folium.Map(location=[media_latitud,media_longitud],zoom_start=6) #Se crea el mapa
     tooltip = "Avistamiento"
     n=1
     for avistamiento in listaCoordenadas:
         #"datetime","city","state","country","shape","duration (seconds)","duration (hours/min)",
         # "comments","date posted","latitude","longitude"
+        
+        fileImage=cf.data_dir+ "UFOS//ufoSpace.png"
+        ufoIcon=folium.features.CustomIcon(fileImage,icon_size=(40,40))
         latitud=avistamiento["latitude"]
         longitud=avistamiento["longitude"]
         nAvistamiento="Avistamiento #"+str(n)
         fecha=avistamiento["datetime"]
         duracion=avistamiento["duration (seconds)"]
         forma= avistamiento["shape"]
-        infoAvistamiento=nAvistamiento + "La fecha es: "+fecha+" Su duración: " +duracion+ "Forma" +forma
-        folium.Marker(location=[latitud, longitud], 
-                        popup=infoAvistamiento,icon=folium.Icon(color="green"),).add_to(map)
+        ciudadPais= avistamiento["city"] +", " + avistamiento["country"]
+        infoAvistamiento=str("<h4> <b> "+nAvistamiento+ ":&nbsp"+ "</h4></b> "+"<br><b>Fecha:  &nbsp </b>"
+                            +fecha+" <br><b>Ciudad, País: </b>" +ciudadPais+" <br><b>Duración: </b>" 
+                            +duracion+ "<br></b>"+"<b>Forma: </b>" +forma)
+        folium.Marker(location=[latitud, longitud], popup=folium.Popup(infoAvistamiento, parse_html=False),icon=ufoIcon,tooltip=nAvistamiento).add_to(mapgraf)
         n+=1
 
-    map
+    mapgraf
 
 #Funciones de consulta para el lab 8 - VIEW
 def infoTreeUFOS(catalog):
@@ -489,11 +492,15 @@ def compareUFObyCity(ufo1,ufo2):
 def compareDuration(dur1,dur2):
     return dur1<dur2
 
-def compareDateHour(fecha1,fecha2): #req3
+def compareDateHourMin(fecha1,fecha2): #req3 ORDEN DE MENOR A MAYOR
     fecha1dt= datetime.datetime.strptime(fecha1["fecha"][:10], '%Y-%m-%d').date()
     fecha2dt= datetime.datetime.strptime(fecha2["fecha"][:10], '%Y-%m-%d').date()
     return fecha1dt<fecha2dt
 
+def compareDateHourMax(fecha1,fecha2): #req3 ORDEN DE MAYOR A MENOR
+    fecha1dt= datetime.datetime.strptime(fecha1["fecha"][:10], '%Y-%m-%d').date()
+    fecha2dt= datetime.datetime.strptime(fecha2["fecha"][:10], '%Y-%m-%d').date()
+    return fecha1dt>fecha2dt
 
 # Funciones de ordenamiento
 
@@ -512,8 +519,8 @@ def sortList(lista,cmpFunction,sortType=1,ordenarInicio=True,
     if sortType == 1: #Selection Sort Edit
         sorted_list= selection.sortEdit(lista,cmpFunction,
                                         posAOrdenar,
-                                        ordenarInicio,
-                                        ordenarFinal)
+                                        ordenarInicio=ordenarInicio,
+                                        ordenarFinal=ordenarFinal)
     elif sortType == 2:
         sorted_list= sa.sort(lista,cmpFunction)
     else:

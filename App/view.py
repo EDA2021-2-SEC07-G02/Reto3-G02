@@ -53,6 +53,13 @@ def printMenu():
     print("7. Salir")
     print("-"*50,"\n")
 
+def printInput(requerimiento,tipo):
+    if tipo=="Input":
+        print("-"*14 + "Requerimiento "+str(requerimiento)+" " + tipo+"s"+"-"*14)
+    elif tipo=="Resultado":
+        print("\n"+"-"*12 + "Requerimiento "+str(requerimiento)+" " + tipo+"s"+"-"*12)
+
+
 catalog = None
 
 def printPrettyTable(lista, keys, field_names, max_width, sample=3, ultimas=False):
@@ -168,6 +175,8 @@ while True:
     printMenu()
     tiempoInicial=time.process_time()
     inputs = input('Seleccione una opción para continuar\n')
+    if inputs!="0" and inputs!="7":
+        printInput(inputs,"Input")
 
     # Requerimiento 0: Carga de datos
     if int(inputs[0]) == 0: #CARGA DE DATOS (Opción 3 según el LAB 8)
@@ -181,19 +190,22 @@ while True:
     elif int(inputs[0]) == 1:
         ciudad=input("Ingrese el nombre de la ciudad: ")
         respuesta=controller.avistamientosPorCiudad(catalog,ciudad)
+        printInput(inputs,"Resultado")
         printAvistamientosPorCiudad(respuesta,ciudad)
         pass
 
     elif int(inputs[0]) == 2:
         dur_min=input("Ingrese la duración mínima: ")
         dur_max=input("Ingrese la duración máxima: ")
+        printInput(inputs,"Resultado")
         controller.avistamientosPorDuracion(catalog,dur_min,dur_max)
         print("Por implementar ....")
 
     elif int(inputs[0]) == 3:
-        hora1="20:45"#input("Ingrese la hora inicial (HH:MM): ")
-        hora2="23:15"#input("Ingrese la hora final (HH:MM): ")
+        hora1=input("Ingrese la hora inicial (HH:MM): ")
+        hora2=input("Ingrese la hora final (HH:MM): ")
         respuesta=controller.avistamientosHoraMinuto(catalog,hora1,hora2)
+        printInput(inputs,"Resultado")
         printAvistamientosPorHora(respuesta,hora1,hora2)
         #print(respuesta)
 
@@ -201,12 +213,14 @@ while True:
         fechaInicial=input("Ingrese la fecha inicial (AAAA-MM-DD): ")
         fechaFinal=input("Ingrese la fecha final (AAAA-MM-DD): ")
         respuesta=controller.avistamientoRangoFechas(catalog,fechaInicial,fechaFinal)
+        printInput(inputs,"Resultado")
         printAvistamientosFechas(respuesta,fechaInicial,fechaFinal)
 
     elif int(inputs[0]) == 5:
         print("Por implementar ....")
 
     elif int(inputs[0]) == 6:
+        printInput(inputs,"Resultado")
         controller.grafAvistamientosZonaGeografica(catalog,-103.00,-109.05,31.33,37.00)
         #print("Por implementar ....")
 
