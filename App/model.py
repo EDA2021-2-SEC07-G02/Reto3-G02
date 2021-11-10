@@ -360,12 +360,39 @@ def ListasRespuesta(catalog,tabla,requerimiento): #req 4 - función complementar
                 ordenarInicio=False,ordenarFinal=True)
     return lista_respuesta,numeroAvistamientos
 
-def contarAvistamientosZonaGeografica(catalog,long_min,long_max,lat_min,lat_max):
+def contarAvistamientosZonaGeografica(catalog,long_min,long_max,lat_min,lat_max): # Requerimiento Grupal 5: 
     """
     Req 5
     """
+    long_min=round(float(long_min),2)
+    long_max=round(float(long_max),2)
+    lat_min=round(float(lat_min),2)
+    lat_max=round(float(lat_max),2)
+
+    if(long_max<long_min):
+        long_temp=long_min
+        long_min=long_max
+        long_max=long_temp
     
-    pass
+    if(lat_max<lat_min):
+        lat_temp=lat_min
+        lat_min=lat_max
+        lat_max=lat_temp
+
+    lat_max+=0.01
+    long_max+=0.01
+    
+
+    avistamientos=lt.newList("ARRAY_LIST")
+
+    for long in lt.iterator(om.keys(catalog["longitudIndex"],long_min,long_max)):
+        arbolLat=om.get(catalog["longitudIndex"],long)["value"]
+        for lat in lt.iterator(om.keys(arbolLat,lat_min,lat_max)):
+            for index in lt.iterator(om.get(arbolLat,lat)["value"]):
+                elemento=lt.getElement(catalog["ufos"],index)
+                lt.addLast(avistamientos,elemento)
+        
+    return avistamientos
 
 def grafAvistamientosZonaGeografica(catalog,long_min,long_max,lat_min,lat_max): #listaCoordenadas)
     #Norte/sur = Latitud

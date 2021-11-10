@@ -168,6 +168,19 @@ def printAvistamientosFechas(respuesta,fechaInicial,fechaFinal): #req 4
     print("A continuación se presentan los tres primeros y tres últimos avistamientos en este rango de fechas")
     printCarga(respuesta[3],requerimiento=4)
 
+def printAvistamientosUbicacionGeografica(respuesta):
+    listaAvistamientos=respuesta
+
+    print("\nEn total hay",lt.size(listaAvistamientos)," en el rango de coordenadas geográfico seleccionado\n")
+    keys=["datetime","city","state","country","shape",
+                        "duration (seconds)","comments","longitude","latitude"]
+    fieldNames=["Fecha","Ciudad","Estado","País","Forma",
+                        "Duración","Comentarios","Longitud","Latitud"]
+    maxWidth = {"Fecha":10,"Ciudad":10,"Estado":10,"País":10,"Forma":10,
+                        "Duración":10,"Comentarios":30,"Longitud":10,"Latitud":10}
+
+    printPrettyTable(listaAvistamientos,keys,fieldNames,maxWidth,sample=5,ultimas=True)
+
 """
 Menu principal
 """
@@ -217,7 +230,12 @@ while True:
         printAvistamientosFechas(respuesta,fechaInicial,fechaFinal)
 
     elif int(inputs[0]) == 5:
-        print("Por implementar ....")
+        longitudMimnima=input("Ingrese una longitud mínima: ")
+        longitudMaxima=input("Ingrese una longitud máxima: ")
+        latitudMinima=input("Ingrese una latitud mínima: ")
+        latitudMaxima=input("Ingrese una latitud máxima: ")
+        respuesta = controller.avistamientosZonaGeografica(catalog,longitudMimnima,longitudMaxima,latitudMinima,latitudMaxima)
+        printAvistamientosUbicacionGeografica(respuesta)
 
     elif int(inputs[0]) == 6:
         printInput(inputs,"Resultado")
