@@ -28,9 +28,10 @@ assert cf
 import time
 import prettytable
 from prettytable import PrettyTable
+from IPython.display import display
 
 
-ufosfile = 'UFOS//UFOS-utf8-small.csv'
+ufosfile = 'UFOS//UFOS-utf8-'
 
 
 """
@@ -181,6 +182,13 @@ def printAvistamientosUbicacionGeografica(respuesta):
 
     printPrettyTable(listaAvistamientos,keys,fieldNames,maxWidth,sample=5,ultimas=True)
 
+def visualizarMapa(catalog,longitudMimnima,longitudMaxima,latitudMinima,latitudMaxima,avistamientosCargados=None):
+    mapa=controller.grafAvistamientosZonaGeografica(catalog,longitudMimnima,longitudMaxima,
+                                                    latitudMinima,latitudMaxima,avistamientosCargados=avistamientosCargados)
+    print("Mapa con avistamientos en el rango de longitud:" +longitudMimnima+" - "+longitudMaxima
+         + " -- latitud:" + latitudMinima+" - "+latitudMaxima )
+    display(mapa)
+
 """
 Menu principal
 """
@@ -236,11 +244,18 @@ while True:
         latitudMaxima=input("Ingrese una latitud máxima: ")
         respuesta = controller.avistamientosZonaGeografica(catalog,longitudMimnima,longitudMaxima,latitudMinima,latitudMaxima)
         printAvistamientosUbicacionGeografica(respuesta)
+        visualizar=input("Visualizar resultados en folium: \n1 ) para visualizar el mapa. \n2 ) no ver el mapa")
+        if visualizar=="1":
+            visualizarMapa(catalog,longitudMimnima,longitudMaxima,latitudMinima,latitudMaxima,avistamientosCargados=respuesta)
+
 
     elif int(inputs[0]) == 6:
+        longitudMimnima=input("Ingrese una longitud mínima: ")
+        longitudMaxima=input("Ingrese una longitud máxima: ")
+        latitudMinima=input("Ingrese una latitud mínima: ")
+        latitudMaxima=input("Ingrese una latitud máxima: ")
         printInput(inputs,"Resultado")
-        controller.grafAvistamientosZonaGeografica(catalog,-103.00,-109.05,31.33,37.00)
-        #print("Por implementar ....")
+        visualizarMapa(catalog,longitudMimnima,longitudMaxima,latitudMinima,latitudMaxima)
 
     else:
         sys.exit(0)

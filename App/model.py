@@ -25,9 +25,8 @@
  """
 
 
-import DISClib
+import config as cf # SIEMPRE DEJAR CONFIG DE PRIMERAS
 from DISClib.DataStructures.bst import maxKey
-import config as cf
 from DISClib.ADT import list as lt
 from DISClib.ADT import map as mp
 from DISClib.ADT import orderedmap as om
@@ -393,50 +392,105 @@ def contarAvistamientosZonaGeografica(catalog,long_min,long_max,lat_min,lat_max)
         
     return avistamientos
 
-def grafAvistamientosZonaGeografica(catalog,long_min,long_max,lat_min,lat_max): #listaCoordenadas)
-    #Norte/sur = Latitud
-    #Oriente/occidente=longitud
-    #Location=(Northing, Easting). = (latitud,longitud)
-    # import folium
-    # import config as cf
-    long_min=-120
-    long_max=-110
-    lat_min=30
-    lat_max=40
+def listaReq6(listaUFOs):
+    if listaUFOs["size"]>10:
+        lista10Elementos=lt.newList("ARRAY_LIST")
+        pos=1
+        size=listaUFOs["size"]
+        condicion=True
+        while condicion:
+            elemento=lt.getElement(listaUFOs,pos)
+            if pos<=5 or pos>=size-5:
+                lt.addLast(lista10Elementos,elemento)
+                pos+=1
+            if lista10Elementos["size"]==5:
+                pos=size-5
+            if lista10Elementos["size"]==10:
+                condicion=False
+    else:
+        lista10Elementos=listaUFOs
 
-    ###BORRAR LISTA COORDENADAS
-    listaCoordenadas=[{'datetime': '1998-12-05 20:30:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'unknown', 'duration (seconds)': '10.0', 'duration (hours/min)': '10 seconds', 'comments': 'Bright light shining directionally out of a cloudy shape or object&#44 got bright and smoky and then disappered.', 'date posted': '1999-01-28 00:00:00', 'latitude': '34.175', 'longitude': '-115.1363889'}, 
-                    {'datetime': '1999-07-19 21:30:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'oval', 'duration (seconds)': '600.0', 'duration (hours/min)': '5-10min.', 'comments': 'Two round bright white ufo&#39s were sighted on National airlines jet N7 316 Boeing 757 time 21;30 hrs just outside Las Vegas&#44Nevada one h', 'date posted': '1999-08-10 00:00:00', 'latitude': '33.175', 'longitude': '-113.1363889'}, 
-                    {'datetime': '2000-01-07 16:20:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'unknown', 'duration (seconds)': '600.0', 'duration (hours/min)': '10 min.', 'comments': 'hypersonic arcraft entering Nevada Test Site airspace', 'date posted': '2000-01-22 00:00:00', 'latitude': '30.175', 'longitude': '-110.1363889'},
-                        {'datetime': '2000-03-18 23:45:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'oval', 'duration (seconds)': '420.0', 'duration (hours/min)': '5-7 minutes', 'comments': 'I was on vacation in Vegas on 3-18. My friend and I were crossing from the NY hotel to Excalbur hotel when we came upon a crowd of 50 p', 'date posted': '2000-05-03 00:00:00', 'latitude': '35.175', 'longitude': '-116.1363889'}, 
-                        {'datetime': '2006-10-15 08:30:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'circle', 'duration (seconds)': '1200.0', 'duration (hours/min)': '20 minutes', 'comments': 'White Balls and Bright Light in the Vegas moring sky.', 'date posted': '2006-10-30 00:00:00', 'latitude': '32.175', 'longitude': '-120.1363889'}, 
-                        {'datetime': '2007-03-04 11:00:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'circle', 'duration (seconds)': '660.0', 'duration (hours/min)': '11:00', 'comments': 'One day&#44as i was looking outside of my room a circle shaped light beeming object appeared out of the blue&#44the light werew bright/the ai', 'date posted': '2007-04-27 00:00:00', 'latitude': '37.175', 'longitude': '-117.1363889'}, 
-                    {'datetime': '2013-04-05 08:30:00', 'city': 'las vegas', 'state': 'nv', 'country': 'us', 'shape': 'formation', 'duration (seconds)': '420.0', 'duration (hours/min)': '7 minutes', 'comments': '5 Red orangish objects making formations over Las Vegas', 'date posted': '2013-05-15 00:00:00', 'latitude': '36.175', 'longitude': '-115.1363889'}]
-    media_longitud=(long_min+long_max)/2
-    media_latitud=(lat_min+lat_max)/2
+    return lista10Elementos
+
+
+def grafAvistamientosZonaGeografica(catalog,long_min,long_max,lat_min,lat_max, avistamientosCargados=None): #listaCoordenadas)
+    """
+    Función para visualizar los avistamientos de acuerdo a coordenadas.
+
+    """
+
+    if avistamientosCargados==None:
+        avistamientosArea=contarAvistamientosZonaGeografica(catalog,long_min,long_max,lat_min,lat_max)
+    else:
+        avistamientosArea=avistamientosCargados
+    
+    listaCoordenadas=listaReq6(avistamientosArea)
+
+    media_longitud=(float(long_min)+float(long_max))/2
+    media_latitud=(float(lat_min)+float(lat_max))/2
     mapgraf=folium.Map(location=[media_latitud,media_longitud],zoom_start=6) #Se crea el mapa
-    tooltip = "Avistamiento"
+
+    #Se crea una tabla de símbolos para coordenadas repetidas
+    mapProbing=mp.newMap(numelements=11,maptype="PROBING")
+
+    for avistamientoUFO in lt.iterator(listaCoordenadas):
+        latitud=avistamientoUFO["latitude"]
+        longitud=avistamientoUFO["longitude"]
+        tuplaCoordenada=(latitud,longitud)
+        existsCoordenada=mp.contains(mapProbing,tuplaCoordenada)
+        if existsCoordenada:
+            coordenada=mp.get(mapProbing,tuplaCoordenada)
+            coordenadaInMap=me.getValue(coordenada)
+        else:
+            coordenadaInMap=lt.newList("ARRAY_LIST")
+            mp.put(mapProbing,tuplaCoordenada,coordenadaInMap)
+        lt.addLast(coordenadaInMap,avistamientoUFO)
+
+
+    coordenadasAgrupadas=mp.valueSet(mapProbing)
+
     n=1
-    for avistamiento in listaCoordenadas:
         #"datetime","city","state","country","shape","duration (seconds)","duration (hours/min)",
         # "comments","date posted","latitude","longitude"
+    for avistamientoTupla in lt.iterator(coordenadasAgrupadas):
+        nAvistamiento="Avistamientos:"
+        qAvistamientos=0
+        avistamientosEnLocacion=""
+        for UFO in lt.iterator(avistamientoTupla):
+            latitud=UFO["latitude"]
+            longitud=UFO["longitude"]
+            fecha=UFO["datetime"]
+            nAvistamiento+=" #" +str(n)
+            duracion=UFO["duration (seconds)"]
+            forma= UFO["shape"]
+            ciudadPais=UFO["city"] +", " + UFO["country"]
+
+            infoPorAvistamiento=str("<br><b> Avistamiento: #"+str(n)+ "</b>"
+                                    +"<br><b>Fecha y hora:  &nbsp </b>"+fecha
+                                    +" <br><b>Duración: </b>" +duracion
+                                    + "<br></b>"+"<b>Forma: </b>" +forma
+                                    + "<br> ")
+            
+            avistamientosEnLocacion+=infoPorAvistamiento
+
+            n+=1
+            qAvistamientos+=1
+
+        
+        infoAvistamientoTupla=str("<br><h4> <b>"+nAvistamiento+ "&nbsp"+ "</b></h4>"
+                            + "<br><b> Cantidad de avistamientos:"+str(qAvistamientos)+ "&nbsp"+ "</b> "
+                            + "<br><b> Ciudad, País: </b>"+ciudadPais
+                            + "<br><br><b> Info por cada avistamiento:</b><br>"
+                            + avistamientosEnLocacion)
+
+        infoHTML=folium.Html(infoAvistamientoTupla,script=True)
         
         fileImage=cf.data_dir+ "UFOS//ufoSpace.png"
         ufoIcon=folium.features.CustomIcon(fileImage,icon_size=(40,40))
-        latitud=avistamiento["latitude"]
-        longitud=avistamiento["longitude"]
-        nAvistamiento="Avistamiento #"+str(n)
-        fecha=avistamiento["datetime"]
-        duracion=avistamiento["duration (seconds)"]
-        forma= avistamiento["shape"]
-        ciudadPais= avistamiento["city"] +", " + avistamiento["country"]
-        infoAvistamiento=str("<h4> <b> "+nAvistamiento+ ":&nbsp"+ "</h4></b> "+"<br><b>Fecha:  &nbsp </b>"
-                            +fecha+" <br><b>Ciudad, País: </b>" +ciudadPais+" <br><b>Duración: </b>" 
-                            +duracion+ "<br></b>"+"<b>Forma: </b>" +forma)
-        folium.Marker(location=[latitud, longitud], popup=folium.Popup(infoAvistamiento, parse_html=False),icon=ufoIcon,tooltip=nAvistamiento).add_to(mapgraf)
-        n+=1
+        folium.Marker(location=[latitud, longitud], popup=folium.Popup(infoHTML, parse_html=False),icon=ufoIcon,tooltip=nAvistamiento).add_to(mapgraf)
 
-    mapgraf
+
+    return mapgraf#.save("PRUEBA914PM.html")
 
 #Funciones de consulta para el lab 8 - VIEW
 def infoTreeUFOS(catalog):
@@ -548,7 +602,7 @@ def sortList(lista,cmpFunction,sortType=1,ordenarInicio=True,
                                         ordenarInicio=ordenarInicio,
                                         ordenarFinal=ordenarFinal)
     elif sortType == 2:
-        sorted_list= sa.sort(lista,cmpFunction)
+        sorted_list= ms.sort(lista,cmpFunction)
     else:
         sorted_list=sa.sort(lista,cmpFunction)
     return sorted_list

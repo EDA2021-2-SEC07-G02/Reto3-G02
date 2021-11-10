@@ -46,8 +46,10 @@ def loadData(catalog, ufosfile):
     """
     Carga los datos de los archivos CSV en el modelo
     """
-    ufosfile = cf.data_dir + ufosfile
-    input_file = csv.DictReader(open(ufosfile, encoding="utf-8"),
+    muestra="small" #input("Pruebas- muestra: ")
+    #print("Catálogo con muestra: "+muestra)
+    fileInput = cf.data_dir + ufosfile + muestra + ".csv"
+    input_file = csv.DictReader(open(fileInput, encoding="utf-8"),
                                 delimiter=",")
     for ufo in input_file:
         model.addUfo(catalog, ufo)
@@ -74,6 +76,6 @@ def avistamientosHoraMinuto(catalog,horaInicial,horaFinal):
 def avistamientosZonaGeografica(catalog,long_min,long_max,lat_min,lat_max):
     return model.contarAvistamientosZonaGeografica(catalog,long_min,long_max,lat_min,lat_max)
 
-def grafAvistamientosZonaGeografica(catalog,long_min,long_max,lat_min,lat_max):
-    return model.grafAvistamientosZonaGeografica(catalog,long_min,long_max,lat_min,lat_max)
+def grafAvistamientosZonaGeografica(catalog,long_min,long_max,lat_min,lat_max,avistamientosCargados):
+    return model.grafAvistamientosZonaGeografica(catalog,long_min,long_max,lat_min,lat_max,avistamientosCargados=avistamientosCargados)
 
