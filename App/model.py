@@ -385,10 +385,9 @@ def contarAvistamientosZonaGeografica(catalog,long_min,long_max,lat_min,lat_max)
 
     avistamientos=lt.newList("ARRAY_LIST")
 
-    for long in lt.iterator(om.keys(catalog["longitudIndex"],long_min,long_max)):
-        arbolLat=om.get(catalog["longitudIndex"],long)["value"]
-        for lat in lt.iterator(om.keys(arbolLat,lat_min,lat_max)):
-            for index in lt.iterator(om.get(arbolLat,lat)["value"]):
+    for arbolLat in lt.iterator(om.values(catalog["longitudIndex"],long_min,long_max)):
+        for lat in lt.iterator(om.values(arbolLat,lat_min,lat_max)):
+            for index in lt.iterator(lat):
                 elemento=lt.getElement(catalog["ufos"],index)
                 lt.addLast(avistamientos,elemento)
         
