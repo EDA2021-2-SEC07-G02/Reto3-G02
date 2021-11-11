@@ -99,13 +99,26 @@ def updateIndexCity(catalog,ufo,posicion):
 
 def updateDuration(catalog,ufo,posicion):
     duration=ufo["duration (seconds)"]
-    duration=int(float(duration))
+    city=ufo["city"]
+    country=ufo["country"]
+    cityCountry=city+"-"+country
+    duration=int(float(duration))      
+
     if om.contains(catalog['durationIndex'],duration):
-        lt.addLast(om.get(catalog['durationIndex'],duration)["value"],posicion)
+        mapCountryCity=om.get(catalog["durationIndex"],duration)["value"]
+        if (om.contains(mapCountryCity,cityCountry)):
+            lt.addLast(om.get(mapCountryCity,cityCountry)["value"],posicion)
+        else:
+            lista=lt.newList("ARRAY_LIST")
+            lt.addLast(lista,posicion)
+            om.put(mapCountryCity,cityCountry,lista)   
     else:
+        mapCountryCity=om.newMap(omaptype='RBT',
+                                comparefunction=compareCitiesMap)
         lista=lt.newList("ARRAY_LIST")
         lt.addLast(lista,posicion)
-        om.put(catalog['durationIndex'],duration,lista)           
+        om.put(mapCountryCity,cityCountry,lista)
+        om.put(catalog["durationIndex"],duration,mapCountryCity)
 
 def updateLongitud(catalog,ufo,posicion):
     longitud=ufo["longitude"]
@@ -156,25 +169,36 @@ def avistamientosPorCiudad(catalog,ciudad): # Requerimiento Grupal 1: Contar los
     return listaAvistamiento, numeroCiudades
 
 def avistamientosPorDuracion(catalog,segundos_min,segundos_max): # Requerimiento Individual 2: Contar avistamientos por duración
+    """
+    Función principal requerimiento 2
+    Parámetros:
+        catalog: catálogo con árboles y lista relacionados a avistamientos de UFOs
+        segundos_min: Hora inicial dada por el usuario
+        segundos_max: Hora Final dada por el usuario
+    Retorno:
+        rangoHoras: lista con los ufos que están dentro del rango de esa hora
+        listaRespuesta: lista con los 3 primeros y 3 últimos UFOs dentro de ese rango
+        contadorAvistamientos: contador de avistamientos ufos dentro del rango de fechas
+        UltimaHora: hora máxima de avistamiento de UFOs
+    """
     segundos_min=int(float(segundos_min))
     segundos_max=int(float(segundos_max))
-    numeroDuraciones=om.size(catalog["durationIndex"])
-
-    mayorDuracion=om.maxKey(catalog["durationIndex"])
-    cantidadUfosMayorDuracion=lt.size(mayorDuracion["value"])
-    mayorDuracion=mayorDuracion["key"]
-
     
-    keySet=om.keySet(catalog["durationIndex"])
-    posicionInicial=om.rank(segundos_min+1)
-    keySet=lt.subList(keySet,posicionInicial,om.rank(segundos_max+1)-posicionInicial)
-    listaAvistamientos=lt.newList("ARRAY_LIST")
-    for dur in lt.iterator(keySet):
-        listaIndex=om.get(catalog["durationIndex"],dur)["value"]
-        for indice in listaIndex:
-           lt.addLast(listaAvistamientos,lt.getElement(catalog["ufos"],indice))
+    listaAvistamientos = lt.newList("ARRAY_LIST")
+    numeroDuraciones=om.size(catalog["durationIndex"])
+    mayorDuracion=om.maxKey(catalog["durationIndex"])
+    arbolMayorDuracion=om.get(catalog["durationIndex"],mayorDuracion)["value"]
+    cantMayorDuracion=0
 
-    return listaAvistamientos, numeroDuraciones, mayorDuracion, cantidadUfosMayorDuracion
+    for listaMayor in lt.iterator(om.valueSet(arbolMayorDuracion)):
+        cantMayorDuracion+=lt.size(listaMayor)
+
+    for duracion in lt.iterator(om.values(catalog["durationIndex"],segundos_min,segundos_max)):
+        for cc in lt.iterator(om.valueSet(duracion)):
+            for indice in lt.iterator(cc):
+                lt.addLast(listaAvistamientos, lt.getElement(catalog["ufos"],indice))
+
+    return listaAvistamientos, numeroDuraciones, mayorDuracion, cantMayorDuracion
 
 def avistamientosHoraMinuto(catalog,horaInicial,horaFinal): #req individual 3
     """
